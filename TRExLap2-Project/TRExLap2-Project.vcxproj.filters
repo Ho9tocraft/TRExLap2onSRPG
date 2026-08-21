@@ -28,4 +28,20 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="data\units\Units.toml">
+      <Filter>リソース ファイル\データ\ユニットデータ</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="data\jobs\Jobs.toml">
+      <Filter>リソース ファイル\データ\ジョブデータ</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="data\units\Exellia-normal.toml">
+      <Filter>リソース ファイル\データ\ユニットデータ</Filter>
+    </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\units\Exellia-semiprime.toml">
+      <Filter>リソース ファイル\データ\ユニットデータ</Filter>
+    </None>
+  </ItemGroup>
 </Project>
