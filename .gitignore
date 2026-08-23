@@ -363,7 +363,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # 〔ユーザー定義〕in-draft フォルダー, 音楽系
-in-draft/*.md
+in-draft/
 !*.png
 # 音楽は容量食いすぎバカタレなので除外
 *.ogg
