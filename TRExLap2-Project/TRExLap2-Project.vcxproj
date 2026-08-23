@@ -237,6 +237,10 @@
     <Image Include="assets\images\playable\exellia_renewal(LoC).png" />
     <Image Include="assets\images\playable\exellia_renewal.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="GOAL.md" />
+    <None Include="STATUS.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
