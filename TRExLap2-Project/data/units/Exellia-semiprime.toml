@@ -1,7 +1,8 @@
-schema_version = "1.0"
+﻿schema_version = "1.0"
 type = "units"
 id = "Exellia-semiprime"
 tags = ["tags here"]
+image = "exellia_renewal(LoC).png"
 
 [main]
 name_ja = "エクセリア(半顕現形態)"

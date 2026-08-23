@@ -233,6 +233,10 @@
     <ClInclude Include="VulkanCheck.hpp" />
     <ClInclude Include="VulkanRenderer.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\images\playable\exellia_renewal(LoC).png" />
+    <Image Include="assets\images\playable\exellia_renewal.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

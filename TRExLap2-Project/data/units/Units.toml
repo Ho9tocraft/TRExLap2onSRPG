@@ -1,7 +1,8 @@
-schema_version = "1.0"
+﻿schema_version = "1.0"
 type = "units"
 id = "Unit ID here"
 tags = ["tags here"]
+image = "Unit Image here(NEED png)"
 
 [main]
 name_ja = "Unit Name here"

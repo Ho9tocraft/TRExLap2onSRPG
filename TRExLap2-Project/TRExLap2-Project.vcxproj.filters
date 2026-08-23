@@ -22,6 +22,9 @@
     <Filter Include="リソース ファイル\データ\ユニットデータ">
       <UniqueIdentifier>{5c454a46-2273-4fe3-940f-0728b046838c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="リソース ファイル\画像ファイル">
+      <UniqueIdentifier>{634fa0c9-eebb-471b-b027-1864e8f5c80b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Triangle.vert">
@@ -52,25 +55,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CopyFileToFolders Include="data\units\Units.toml">
-      <Filter>リソース ファイル\データ\ユニットデータ</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="data\jobs\Jobs.toml">
-      <Filter>リソース ファイル\データ\ジョブデータ</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="data\units\Exellia-normal.toml">
-      <Filter>リソース ファイル\データ\ユニットデータ</Filter>
-    </CopyFileToFolders>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="data\units\Exellia-semiprime.toml">
-      <Filter>リソース ファイル\データ\ユニットデータ</Filter>
-    </None>
-    <None Include="..\in-draft\2026-08-22_data_parsing_stack.md">
-      <Filter>リソース ファイル</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="Win32Window.hpp">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -89,5 +73,27 @@
     <ClInclude Include="ImageLoader.hpp">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="data\jobs\Jobs.toml">
+      <Filter>リソース ファイル\データ\ジョブデータ</Filter>
+    </Text>
+    <Text Include="data\units\Exellia-normal.toml">
+      <Filter>リソース ファイル\データ\ユニットデータ</Filter>
+    </Text>
+    <Text Include="data\units\Exellia-semiprime.toml">
+      <Filter>リソース ファイル\データ\ユニットデータ</Filter>
+    </Text>
+    <Text Include="data\units\Units.toml">
+      <Filter>リソース ファイル\データ\ユニットデータ</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\images\playable\exellia_renewal(LoC).png">
+      <Filter>リソース ファイル\画像ファイル</Filter>
+    </Image>
+    <Image Include="assets\images\playable\exellia_renewal.png">
+      <Filter>リソース ファイル\画像ファイル</Filter>
+    </Image>
   </ItemGroup>
 </Project>
