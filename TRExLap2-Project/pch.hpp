@@ -6,6 +6,8 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
+#include <chrono>
 #include <exception>
 #include <cstdint>
 #include <filesystem>
@@ -29,3 +31,4 @@
 #include <nvsdk_ngx_helpers_vk.h>
 
 #include <Windows.h>
+#include <mmsystem.h>

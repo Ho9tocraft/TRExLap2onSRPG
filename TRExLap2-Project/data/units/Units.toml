@@ -3,6 +3,7 @@ type = "units"
 id = "Unit ID here"
 tags = ["tags here"]
 image = "Unit Image here(NEED png)"
+bgm = "BGM here(NEED ogg or mp3)"
 
 [main]
 name_ja = "Unit Name here"

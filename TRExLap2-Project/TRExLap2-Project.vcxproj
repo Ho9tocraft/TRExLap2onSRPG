@@ -145,7 +145,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib;C:\DLSS\lib\Windows_x86_64\x64\nvsdk_ngx_d_dbg.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib;C:\DLSS\lib\Windows_x86_64\x64\nvsdk_ngx_d_dbg.lib;windowscodecs.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\DLSS\lib\Windows_x86_64\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
@@ -170,13 +170,14 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib;C:\DLSS\lib\Windows_x86_64\x64\nvsdk_ngx_d.lib;windowscodecs.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib;C:\DLSS\lib\Windows_x86_64\x64\nvsdk_ngx_d.lib;windowscodecs.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AudioPlayer.cpp" />
     <ClCompile Include="DebugConsole.cpp" />
     <ClCompile Include="ImageLoader.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -207,13 +208,17 @@
   <ItemGroup>
     <Text Include="data\jobs\Jobs.toml">
       <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DeploymentContent>
     </Text>
     <Text Include="data\units\Units.toml">
       <FileType>Document</FileType>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DeploymentContent>
     </Text>
   </ItemGroup>
   <ItemGroup>
@@ -221,6 +226,8 @@
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
     </Text>
   </ItemGroup>
   <ItemGroup>
@@ -228,9 +235,12 @@
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
     </Text>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AudioPlayer.hpp" />
     <ClInclude Include="DebugConsole.hpp" />
     <ClInclude Include="ImageLoader.hpp" />
     <ClInclude Include="Win32Window.hpp" />
@@ -252,7 +262,7 @@
       <DlssRuntime Include="C:\DLSS\lib\Windows_x86_64\dev\nvngx_dlss.dll" Condition="'$(Configuration)' == 'Debug'" />
       <DlssRuntime Include="C:\DLSS\lib\Windows_x86_64\rel\nvngx_dlss.dll" Condition="'$(Configuration)' == 'Release'" />
     </ItemGroup>
-    <Copy SourceFiles="@(RuntimeAssets)" DestinationFiles="@(RuntimeAssets-&gt;'$(OutDir)assets\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(RuntimeAssets)" DestinationFiles="@(RuntimeAssets->'$(OutDir)assets\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(DlssRuntime)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

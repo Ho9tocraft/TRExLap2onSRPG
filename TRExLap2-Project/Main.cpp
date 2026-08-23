@@ -1,4 +1,5 @@
 #include "pch.hpp"
+#include "AudioPlayer.hpp"
 #include "ImageLoader.hpp"
 #include "Win32Window.hpp"
 #include "VulkanRenderer.hpp"
@@ -30,6 +31,7 @@ int WINAPI wWinMain(
 	try
 	{
 		const std::filesystem::path portraitPath = GetExecutableDirectory() / L"assets/images/playable/exellia_renewal.png";
+		const std::filesystem::path bgmPath = GetExecutableDirectory() / L"assets/audio/FF16_Logos.ogg";
 		const ImageRgba8 exelliaPortrait = ImageLoader::LoadRgba8(portraitPath);
 		std::ostringstream imageInfo;
 		imageInfo << "[ImageLoader] exellia_renewal.png: " << exelliaPortrait.width << 'x' << exelliaPortrait.height << " RGBA8\n";
@@ -41,9 +43,21 @@ int WINAPI wWinMain(
 			window.GetClientWidth(),
 			window.GetClientHeight(),
 			exelliaPortrait);
+		AudioPlayer bgm(bgmPath);
+		bgm.PlayLooping();
+		if (!bgm.UsesTaggedLoop()) throw std::runtime_error("FF16_Logos.ogg does not expose a valid LOOPSTART/LOOPLENGTH tag.");
+		OutputDebugStringA("[Audio] Logos is playing with its OGG loop range.\n");
+		const auto& taggedLoopRange = bgm.GetTaggedLoopRangeMilliseconds();
+		const auto introVerificationTime = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+		const auto taggedLoopVerificationTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(taggedLoopRange->second + 5000);
+		bool introVerified = false;
+		bool taggedLoopVerified = false;
 
 		while (window.ProcessMessages())
 		{
+			/** 初回イントロ終了後に、タグ付きOGGの反復範囲へ切り替える。 */
+			bgm.UpdateLooping();
+
 			/** WM_SIZEを受けたフレームでだけ、Swapchain依存資源を作り直す。 */
 			if (window.ConsumeResize() && !window.IsMinimized())
 			{
@@ -56,6 +70,30 @@ int WINAPI wWinMain(
 			{
 				/** 画像付き矩形を描画する。後でSRPGマップとUI描画をここへ追加する。 */
 				renderer.DrawFrame();
+
+				/** 再生開始直後の位置がLOOPSTARTより前であることを確認し、イントロの再生を保証する。 */
+				if (!introVerified && std::chrono::steady_clock::now() >= introVerificationTime)
+				{
+					const std::uint64_t playbackPosition = bgm.GetPlaybackPositionMilliseconds();
+					if (playbackPosition == 0 || playbackPosition >= taggedLoopRange->first)
+					{
+						throw std::runtime_error("The OGG BGM did not begin from the file start before LOOPSTART.");
+					}
+					introVerified = true;
+					OutputDebugStringA("[Audio] Logos intro playback from the file start verified.\n");
+				}
+
+				/** OGGの最初のループ終端通過後、再生位置がタグ区間へ戻ったことを一度だけ確認する。 */
+				if (!taggedLoopVerified && std::chrono::steady_clock::now() >= taggedLoopVerificationTime)
+				{
+					const std::uint64_t playbackPosition = bgm.GetPlaybackPositionMilliseconds();
+					if (!bgm.IsTaggedLoopRepeatPlaying() || playbackPosition < taggedLoopRange->first || playbackPosition >= taggedLoopRange->second)
+					{
+						throw std::runtime_error("The OGG BGM did not return to its LOOPSTART/LOOPLENGTH range after the first loop.");
+					}
+					taggedLoopVerified = true;
+					OutputDebugStringA("[Audio] Logos OGG loop range verified after its first loop.\n");
+				}
 			}
 			else
 			{

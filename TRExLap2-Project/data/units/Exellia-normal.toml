@@ -2,7 +2,7 @@
 type = "units"
 id = "Exellia-normal"
 tags = ["tags here"]
-image = "exellia_renewal.png"
+image = "playable/exellia_renewal.png"
 
 [main]
 name_ja = "エクセリア(通常形態)"
