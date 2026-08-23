@@ -27,10 +27,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="Triangle.vert">
+    <CustomBuild Include="TRExLap2Shader.vert">
       <Filter>リソース ファイル</Filter>
     </CustomBuild>
-    <CustomBuild Include="Triangle.frag">
+    <CustomBuild Include="TRExLap2Shader.frag">
+      <Filter>リソース ファイル</Filter>
+    </CustomBuild>
+    <CustomBuild Include="TRExLap2Taa.frag">
       <Filter>リソース ファイル</Filter>
     </CustomBuild>
   </ItemGroup>

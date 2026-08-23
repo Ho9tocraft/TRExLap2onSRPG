@@ -6,6 +6,19 @@
 
 namespace {
 	constexpr wchar_t kWindowTitle[] = L"TRExLap2 on SRPG";
+
+	/** 実行ファイルの配置先を取得し、作業ディレクトリに依存しないアセット探索に使う。 */
+	std::filesystem::path GetExecutableDirectory()
+	{
+		std::vector<wchar_t> pathBuffer(MAX_PATH);
+		while (true)
+		{
+			const DWORD copiedLength = GetModuleFileNameW(nullptr, pathBuffer.data(), static_cast<DWORD>(pathBuffer.size()));
+			if (copiedLength == 0) throw std::runtime_error("GetModuleFileNameW failed.");
+			if (copiedLength < pathBuffer.size() - 1) return std::filesystem::path(pathBuffer.data()).parent_path();
+			pathBuffer.resize(pathBuffer.size() * 2);
+		}
+	}
 }
 
 int WINAPI wWinMain(
@@ -16,7 +29,8 @@ int WINAPI wWinMain(
 {
 	try
 	{
-		const ImageRgba8 exelliaPortrait = ImageLoader::LoadRgba8(L"assets/images/playable/exellia_renewal.png");
+		const std::filesystem::path portraitPath = GetExecutableDirectory() / L"assets/images/playable/exellia_renewal.png";
+		const ImageRgba8 exelliaPortrait = ImageLoader::LoadRgba8(portraitPath);
 		std::ostringstream imageInfo;
 		imageInfo << "[ImageLoader] exellia_renewal.png: " << exelliaPortrait.width << 'x' << exelliaPortrait.height << " RGBA8\n";
 		OutputDebugStringA(imageInfo.str().c_str());
@@ -25,7 +39,8 @@ int WINAPI wWinMain(
 		VulkanRenderer renderer(
 			window.GetHandle(),
 			window.GetClientWidth(),
-			window.GetClientHeight());
+			window.GetClientHeight(),
+			exelliaPortrait);
 
 		while (window.ProcessMessages())
 		{
@@ -39,7 +54,7 @@ int WINAPI wWinMain(
 
 			if (!window.IsMinimized())
 			{
-				/** 現段階では単色クリアのみ。後でSRPGマップとUI描画をここへ追加する。 */
+				/** 画像付き矩形を描画する。後でSRPGマップとUI描画をここへ追加する。 */
 				renderer.DrawFrame();
 			}
 			else

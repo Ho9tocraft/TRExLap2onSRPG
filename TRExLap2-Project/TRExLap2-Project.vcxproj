@@ -188,15 +188,20 @@
     <ClCompile Include="VulkanRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="Triangle.vert">
+    <CustomBuild Include="TRExLap2Shader.vert">
       <FileType>Document</FileType>
-      <Command>"C:\VulkanSDK\1.4.357.0\Bin\glslc.exe" "%(FullPath)" -o "$(OutDir)Triangle.vert.spv"</Command>
-      <Outputs>$(OutDir)Triangle.vert.spv</Outputs>
+      <Command>"C:\VulkanSDK\1.4.357.0\Bin\glslc.exe" "%(FullPath)" -o "$(OutDir)TRExLap2Shader.vert.spv"</Command>
+      <Outputs>$(OutDir)TRExLap2Shader.vert.spv</Outputs>
     </CustomBuild>
-    <CustomBuild Include="Triangle.frag">
+    <CustomBuild Include="TRExLap2Shader.frag">
       <FileType>Document</FileType>
-      <Command>"C:\VulkanSDK\1.4.357.0\Bin\glslc.exe" "%(FullPath)" -o "$(OutDir)Triangle.frag.spv"</Command>
-      <Outputs>$(OutDir)Triangle.frag.spv</Outputs>
+      <Command>"C:\VulkanSDK\1.4.357.0\Bin\glslc.exe" "%(FullPath)" -o "$(OutDir)TRExLap2Shader.frag.spv"</Command>
+      <Outputs>$(OutDir)TRExLap2Shader.frag.spv</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="TRExLap2Taa.frag">
+      <FileType>Document</FileType>
+      <Command>"C:\VulkanSDK\1.4.357.0\Bin\glslc.exe" "%(FullPath)" -o "$(OutDir)TRExLap2Taa.frag.spv"</Command>
+      <Outputs>$(OutDir)TRExLap2Taa.frag.spv</Outputs>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
@@ -241,6 +246,15 @@
     <None Include="GOAL.md" />
     <None Include="STATUS.md" />
   </ItemGroup>
+  <Target Name="CopyRuntimeAssets" AfterTargets="Build">
+    <ItemGroup>
+      <RuntimeAssets Include="$(ProjectDir)assets\**\*.*" />
+      <DlssRuntime Include="C:\DLSS\lib\Windows_x86_64\dev\nvngx_dlss.dll" Condition="'$(Configuration)' == 'Debug'" />
+      <DlssRuntime Include="C:\DLSS\lib\Windows_x86_64\rel\nvngx_dlss.dll" Condition="'$(Configuration)' == 'Release'" />
+    </ItemGroup>
+    <Copy SourceFiles="@(RuntimeAssets)" DestinationFiles="@(RuntimeAssets-&gt;'$(OutDir)assets\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(DlssRuntime)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
