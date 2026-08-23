@@ -16,8 +16,7 @@
 /**
  * @brief Win32ウィンドウにVulkan 1.3の描画結果を提示する最小レンダラ。
  *
- * 現段階ではDynamic Renderingでスワップチェーン画像をクリアするだけ。
- * シェーダ、パイプライン、頂点バッファは次の描画段階で追加する。
+ * Dynamic Renderingでスワップチェーン画像をクリアし、検証用の三角形を描画する。
  */
 class VulkanRenderer final
 {
@@ -81,13 +80,19 @@ private:
 	void CreateLogicalDevice();
 	void CreateSwapchain();
 	void CreateSwapchainImageViews();
+	void CreateTexture();
+	void DestroyTexture();
+	void CreateDescriptorSetLayout();
+	void CreateDescriptorPoolAndSet();
+	void CreateGraphicsPipeline();
+	VkShaderModule CreateShaderModule(const std::vector<std::uint32_t>& code) const;
 
 	void CreateCommandPool();
 	void AllocateCommandBuffers();
 	void CreateSyncObjects();
 
 	/**
-	 * @brief スワップチェーン画像を濃紺でクリアするコマンドを記録する。
+	 * @brief スワップチェーン画像を濃紺でクリアし、三角形を描画するコマンドを記録する。
 	 *
 	 * PRESENT/UNDEFINED -> COLOR_ATTACHMENT_OPTIMAL -> PRESENT_SRC_KHR の順で
 	 * 画像レイアウトを遷移させる。
@@ -143,6 +148,18 @@ private:
 
 	VkCommandPool commandPool_ = VK_NULL_HANDLE;
 	std::vector<VkCommandBuffer> commandBuffers_;
+
+	/** Dynamic Rendering用の空のDescriptor Set Layoutを持つパイプラインレイアウト。 */
+	VkPipelineLayout graphicsPipelineLayout_ = VK_NULL_HANDLE;
+	/** 頂点バッファを使わず、頂点シェーダがgl_VertexIndexから三頂点を生成するパイプライン。 */
+	VkPipeline graphicsPipeline_ = VK_NULL_HANDLE;
+	VkImage textureImage_ = VK_NULL_HANDLE;
+	VkDeviceMemory textureMemory_ = VK_NULL_HANDLE;
+	VkImageView textureImageView_ = VK_NULL_HANDLE;
+	VkSampler textureSampler_ = VK_NULL_HANDLE;
+	VkDescriptorSetLayout textureDescriptorSetLayout_ = VK_NULL_HANDLE;
+	VkDescriptorPool textureDescriptorPool_ = VK_NULL_HANDLE;
+	VkDescriptorSet textureDescriptorSet_ = VK_NULL_HANDLE;
 
 	std::array<FrameSync, kMaxFramesInFlight> frameSyncs_{};
 	std::uint32_t currentFrame_ = 0;

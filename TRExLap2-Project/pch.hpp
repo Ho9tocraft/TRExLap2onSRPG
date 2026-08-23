@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -8,6 +8,8 @@
 #include <array>
 #include <exception>
 #include <cstdint>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <limits>
 #include <optional>
@@ -19,9 +21,11 @@
 #include <vector>
 #include <string>
 
+#include <vulkan/vulkan.h>
+
+/** Vulkan型を定義してから、Vulkan用NGX/DLSS APIを読み込む。 */
 #include <nvsdk_ngx.h>
 #include <nvsdk_ngx_vk.h>
 #include <nvsdk_ngx_helpers_vk.h>
-#include <vulkan/vulkan.h>
 
 #include <Windows.h>

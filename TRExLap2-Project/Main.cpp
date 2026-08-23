@@ -1,4 +1,5 @@
-﻿#include "pch.hpp"
+#include "pch.hpp"
+#include "ImageLoader.hpp"
 #include "Win32Window.hpp"
 #include "VulkanRenderer.hpp"
 #include <exception>
@@ -15,6 +16,11 @@ int WINAPI wWinMain(
 {
 	try
 	{
+		const ImageRgba8 exelliaPortrait = ImageLoader::LoadRgba8(L"assets/images/playable/exellia_renewal.png");
+		std::ostringstream imageInfo;
+		imageInfo << "[ImageLoader] exellia_renewal.png: " << exelliaPortrait.width << 'x' << exelliaPortrait.height << " RGBA8\n";
+		OutputDebugStringA(imageInfo.str().c_str());
+
 		Win32Window window(hInstance, kWindowTitle, 1920, 1080, showCommand);
 		VulkanRenderer renderer(
 			window.GetHandle(),
