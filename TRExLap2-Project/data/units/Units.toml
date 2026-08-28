@@ -4,6 +4,7 @@ id = "Unit ID here"
 tags = ["tags here"]
 image = "Unit Image here(NEED png)"
 bgm = "BGM here(NEED ogg or mp3)"
+bgm_priority = 0 # BGM優先度(-5<-低----  ----高->15)
 
 [main]
 name_ja = "Unit Name here"
@@ -18,8 +19,10 @@ Unit.DEF = 1000 # 装甲値
 Unit.MOB = 100 # 運動性
 Unit.SIG = 100 # 照準値
 Unit.MVR = 6 # 移動力
-Unit.MVT = [0, 1] # 移動タイプ(-1:地中, 0:地上, 1:飛行, 2:水中, 3:水上)
+Unit.MVT = [0, 1] # 移動タイプ(-1:地中, 0:地上, 1:飛行, 2:水中, 3:水上, 4:宇宙/異空間)
+Unit.ADP = [5, 5, 4, 5] # 地形適応(空, 陸, 海, 宇の順)
 Pilot.PSL = -1 # 性格 (-1:機械, 0:普通, 1:強気, 2:超強気, 3:冷静, 4:慎重, 5:楽天家, 6:努力家, 7:短気, 8:大物, 9:超大物, 10:狡猾, 11:残虐, 12:残火, 13:狂気)
+Pilot.GND = -2 # 性別 (-2:機械, -1:不明, 0:男性, 1:女性)
 Pilot.MEL = 145 # 格闘
 Pilot.RNG = 145 # 射撃
 Pilot.MAG = 145 # 魔力
@@ -29,6 +32,7 @@ Pilot.AVD = 158 # 回避
 Pilot.RST = 150 # 抵抗
 Pilot.ACC = 160 # 命中
 Pilot.SPP = 40 # 精神ポイント
+Pilot.SyncedUnit = ["Unit ID here"] # 同期ユニットID
 
 [loadout]
 job_id = "Job ID here" # ジョブID
@@ -52,10 +56,17 @@ skill_hasLevel = true # スキルレベルの有無
 skill_level = [1] # スキルレベル
 skill_learn_level = [1] # スキル習得レベル
 
+# 精神コマンドは6個+ツイン1個まで
+[[spiritual_command]]
+sp_id = "Spiritual Command ID here" # 精神コマンドID
+sp_learn_level = 1 # 精神コマンド習得レベル (1～99 or 0(ツイン精神))
+sp_cost = 0 # 精神コマンド消費値(0はデフォルト値)
+
 [[relationships]]
-relationship_id = "Relationship ID here" # 関係性ID
-relationship_target = "Relationship Target here" # 関係性対象
-relationship_level = 1 # 関係性レベル
+relationship_id = "Relationship ID here" # リレーション補正ID
+relationship_type = "Relationship Type here" # リレーション補正タイプ
+relationship_target = "Relationship Target here" # リレーション補正対象
+relationship_level = 1 # リレーション補正レベル
 
 [[weapons]]
 weapon_id = "Weapon ID here" # 武器ID
@@ -76,13 +87,32 @@ max_bullet = 1 # 最大弾数 (BRT武器のみ)
 consume_value = 0 # 消費値 (HP, MP, HPMP武器のみ。HPMP武器ではHPコスト)
 consume_value2 = 0 # 消費値2 (HPMP武器のみ。HPMP武器ではMPコスト)
 recast_timer = 0 # リキャストタイマー
-recast_timer_type = "Recast Timer Type here" # リキャストタイマータイプ(NONE, SOLO, GCD, SINK_X。Xは10進数数値)
+recast_timer_type = "Recast Timer Type here" # リキャストタイマータイプ(NONE, SOLO, GCD, SYNC_X。Xは10進数数値)
 recast_charge_act = false # チャージアクションかどうか
 recast_charge_act_max = 0 # チャージアクションの最大チャージ数
 need_morale = 0 # 必要気力。100以下で必要気力なしと同義
 accurary_adapt = 0 # 命中補正値
 critical_adapt = 0 # クリティカル補正値
 weapon_tadapt = [5,5,5,5] # 武器地形適応(0:F(使用不可), 1:E(20％), 2:D(40％), 3:C(60％), 4:B(80％), 5:A(100％), 6:S(120％) / 空,陸,海,宇)
+
+[[abilities]]
+ability_id = "Ability ID here" # アビリティID
+ability_name_ja = "Ability Name here" # アビリティ名(日本語)
+ability_name_en = "Ability Name here" # アビリティ名(英語)
+ability_effect = ["Ability Effect here"] # アビリティ効果
+ability_category = ["Ability Category here"] # アビリティカテゴリ(武器と同じ)
+ability_attribute = ["Ability Attribute here"] # アビリティ属性(武器と同じ)
+min_range = 1 # 最小射程
+max_range = 1 # 最大射程
+consume_type = "Consume Type here" # 消費タイプ(NONE, HP, MP, HPMP, BRT)
+max_bullet = 1 # 最大弾数 (BRT武器のみ)
+consume_value = 0 # 消費値 (HP, MP, HPMP武器のみ。HPMP武器ではHPコスト)
+consume_value2 = 0 # 消費値2 (HPMP武器のみ。HPMP武器ではMPコスト)
+recast_timer = 0 # リキャストタイマー
+recast_timer_type = "Recast Timer Type here" # リキャストタイマータイプ(NONE, SOLO, GCD, SYNC_X。Xは10進数数値)
+recast_charge_act = false # チャージアクションかどうか
+recast_charge_act_max = 0 # チャージアクションの最大チャージ数
+need_morale = 0 # 必要気力。100以下で必要気力なしと同義
 
 [aceBonus]
 ace_bonus_id = "Ace Bonus ID here" # エースボーナスID

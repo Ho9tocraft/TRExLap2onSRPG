@@ -38,9 +38,9 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-	<ClCompile Include="AudioPlayer.cpp">
-	  <Filter>ソース ファイル</Filter>
-	</ClCompile>
+    <ClCompile Include="AudioPlayer.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="Main.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -59,11 +59,26 @@
     <ClCompile Include="ImageLoader.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="TRExLap2Unit.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="TRExLap2Enums.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Xorshift1024ss.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="TRExLap2UnitEffect.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="TRExLap2SpCommand.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-	<ClInclude Include="AudioPlayer.hpp">
-	  <Filter>ヘッダー ファイル</Filter>
-	</ClInclude>
+    <ClInclude Include="AudioPlayer.hpp">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
     <ClInclude Include="Win32Window.hpp">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -80,6 +95,24 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="ImageLoader.hpp">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="TRExLap2Unit.hpp">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="TRExLap2Enums.hpp">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Xorshift1024ss.hpp">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="TRExLap2UnitEffect.hpp">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Main.hpp">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="TRExLap2SpCommand.hpp">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
@@ -112,5 +145,7 @@
     <None Include="STATUS.md">
       <Filter>リソース ファイル</Filter>
     </None>
+    <None Include="CODEX_INFO.md" />
+    <None Include="shared-draft\Unit Data Parsing.md" />
   </ItemGroup>
 </Project>

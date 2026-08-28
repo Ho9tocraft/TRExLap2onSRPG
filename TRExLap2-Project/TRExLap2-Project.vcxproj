@@ -185,8 +185,13 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="TRExLap2Enums.cpp" />
+    <ClCompile Include="TRExLap2SpCommand.cpp" />
+    <ClCompile Include="TRExLap2Unit.cpp" />
+    <ClCompile Include="TRExLap2UnitEffect.cpp" />
     <ClCompile Include="Win32Window.cpp" />
     <ClCompile Include="VulkanRenderer.cpp" />
+    <ClCompile Include="Xorshift1024ss.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="TRExLap2Shader.vert">
@@ -243,17 +248,28 @@
     <ClInclude Include="AudioPlayer.hpp" />
     <ClInclude Include="DebugConsole.hpp" />
     <ClInclude Include="ImageLoader.hpp" />
+    <ClInclude Include="Main.hpp" />
+    <ClInclude Include="TRExLap2Enums.hpp" />
+    <ClInclude Include="TRExLap2SpCommand.hpp" />
+    <ClInclude Include="TRExLap2Unit.hpp" />
+    <ClInclude Include="TRExLap2UnitEffect.hpp" />
     <ClInclude Include="Win32Window.hpp" />
     <ClInclude Include="pch.hpp" />
     <ClInclude Include="VulkanCheck.hpp" />
     <ClInclude Include="VulkanRenderer.hpp" />
+    <ClInclude Include="Xorshift1024ss.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\images\playable\exellia_renewal(LoC).png" />
     <Image Include="assets\images\playable\exellia_renewal.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="CODEX_INFO.md" />
     <None Include="GOAL.md" />
+    <None Include="shared-draft\Unit Data Parsing.md">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
     <None Include="STATUS.md" />
   </ItemGroup>
   <Target Name="CopyRuntimeAssets" AfterTargets="Build">

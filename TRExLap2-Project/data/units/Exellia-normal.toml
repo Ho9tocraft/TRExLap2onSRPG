@@ -1,8 +1,10 @@
 ﻿schema_version = "1.0"
 type = "units"
-id = "Exellia-normal"
+id = "exellia-normal"
 tags = ["tags here"]
 image = "playable/exellia_renewal.png"
+bgm = "FF14_torn_from_the_heavens_orch.ogg"
+bgm_priority = 2 # BGM優先度(-5<-低----  ----高->15)
 
 [main]
 name_ja = "エクセリア(通常形態)"
@@ -17,8 +19,10 @@ Unit.DEF = 1100 # 装甲値
 Unit.MOB = 130 # 運動性
 Unit.SIG = 155 # 照準値
 Unit.MVR = 8 # 移動力
-Unit.MVT = [0, 1] # 移動タイプ(-1:地中, 0:地上, 1:飛行, 2:水中, 3:水上)
+Unit.MVT = [0, 1] # 移動タイプ(-1:地中, 0:地上, 1:飛行, 2:水中, 3:水上, 4:宇宙/異空間)
+Unit.ADP = [5, 5, 4, 5] # 地形適応(空, 陸, 海, 宇の順)
 Pilot.PSL = 12 # 性格 (-1:機械, 0:普通, 1:強気, 2:超強気, 3:冷静, 4:慎重, 5:楽天家, 6:努力家, 7:短気, 8:大物, 9:超大物, 10:狡猾, 11:残虐, 12:残火, 13:狂気)
+Pilot.GND = 1 # 性別 (-2:機械, -1:不明, 0:男性, 1:女性)
 Pilot.MEL = 154 # 格闘
 Pilot.RNG = 148 # 射撃
 Pilot.MAG = 120 # 魔力
@@ -28,6 +32,7 @@ Pilot.AVD = 182 # 回避
 Pilot.RST = 164 # 抵抗
 Pilot.ACC = 184 # 命中
 Pilot.SPP = 60 # 精神ポイント
+Pilot.SyncedUnit = ["exellia-semiprime"] # 同期ユニットID
 
 [loadout]
 job_id = "dps_exorcist" # ジョブID
@@ -102,6 +107,42 @@ skill_hasLevel = false # スキルレベルの有無
 skill_level = [1] # スキルレベル
 skill_learn_level = [1] # スキル習得レベル
 
+# 精神コマンドは6個+ツイン1個まで
+[[spiritual_command]]
+sp_id = "加速" # 精神コマンドID
+sp_learn_level = 1 # 精神コマンド習得レベル (1～99 or 0(ツイン精神))
+sp_cost = 0 # 精神コマンド消費値(0はデフォルト値)
+
+[[spiritual_command]]
+sp_id = "直撃" # 精神コマンドID
+sp_learn_level = 10 # 精神コマンド習得レベル (1～99 or 0(ツイン精神))
+sp_cost = 0 # 精神コマンド消費値(0はデフォルト値)
+
+[[spiritual_command]]
+sp_id = "先見" # 精神コマンドID
+sp_learn_level = 19 # 精神コマンド習得レベル (1～99 or 0(ツイン精神))
+sp_cost = 0 # 精神コマンド消費値(0はデフォルト値)
+
+[[spiritual_command]]
+sp_id = "信念" # 精神コマンドID
+sp_learn_level = 28 # 精神コマンド習得レベル (1～99 or 0(ツイン精神))
+sp_cost = 0 # 精神コマンド消費値(0はデフォルト値)
+
+[[spiritual_command]]
+sp_id = "覚醒" # 精神コマンドID
+sp_learn_level = 47 # 精神コマンド習得レベル (1～99 or 0(ツイン精神))
+sp_cost = 0 # 精神コマンド消費値(0はデフォルト値)
+
+[[spiritual_command]]
+sp_id = "勇気" # 精神コマンドID
+sp_learn_level = 65 # 精神コマンド習得レベル (1～99 or 0(ツイン精神))
+sp_cost = 10 # 精神コマンド消費値(0はデフォルト値)
+
+[[spiritual_command]]
+sp_id = "愛" # 精神コマンドID
+sp_learn_level = 0 # 精神コマンド習得レベル (1～99 or 0(ツイン精神))
+sp_cost = 10 # 精神コマンド消費値(0はデフォルト値)
+
 [[relationships]]
 relationship_id = "Relationship ID here" # 関係性ID
 relationship_target = "Relationship Target here" # 関係性対象
@@ -122,7 +163,7 @@ max_bullet = 1 # 最大弾数 (BRT武器のみ)
 consume_value = 0 # 消費値 (HP, MP, HPMP武器のみ。HPMP武器ではHPコスト)
 consume_value2 = 0 # 消費値2 (HPMP武器のみ。HPMP武器ではMPコスト)
 recast_timer = 0 # リキャストタイマー
-recast_timer_type = "NONE" # リキャストタイマータイプ(NONE, SOLO, GCD, SINK_X。Xは10進数数値)
+recast_timer_type = "NONE" # リキャストタイマータイプ(NONE, SOLO, GCD, SYNC_X。Xは10進数数値)
 recast_charge_act = false # チャージアクションかどうか
 recast_charge_act_max = 0 # チャージアクションの最大チャージ数
 need_morale = 0 # 必要気力。100以下で必要気力なしと同義
@@ -149,7 +190,7 @@ max_bullet = 1 # 最大弾数 (BRT武器のみ)
 consume_value = 200 # 消費値 (HP, MP, HPMP武器のみ。HPMP武器ではHPコスト)
 consume_value2 = 20 # 消費値2 (HPMP武器のみ。HPMP武器ではMPコスト)
 recast_timer = 3 # リキャストタイマー
-recast_timer_type = "SINK_0" # リキャストタイマータイプ(NONE, SOLO, GCD, SINK_X。Xは10進数数値)
+recast_timer_type = "SYNC_0" # リキャストタイマータイプ(NONE, SOLO, GCD, SYNC_X。Xは10進数数値)
 recast_charge_act = true # チャージアクションかどうか
 recast_charge_act_max = 2 # チャージアクションの最大チャージ数
 need_morale = 145 # 必要気力。100以下で必要気力なしと同義
@@ -185,7 +226,7 @@ max_bullet = 10 # 最大弾数 (BRT武器のみ)
 consume_value = 0 # 消費値 (HP, MP, HPMP武器のみ。HPMP武器ではHPコスト)
 consume_value2 = 0 # 消費値2 (HPMP武器のみ。HPMP武器ではMPコスト)
 recast_timer = 0 # リキャストタイマー
-recast_timer_type = "NONE" # リキャストタイマータイプ(NONE, SOLO, GCD, SINK_X。Xは10進数数値)
+recast_timer_type = "NONE" # リキャストタイマータイプ(NONE, SOLO, GCD, SYNC_X。Xは10進数数値)
 recast_charge_act = false # チャージアクションかどうか
 recast_charge_act_max = 0 # チャージアクションの最大チャージ数
 need_morale = 0 # 必要気力。100以下で必要気力なしと同義
@@ -208,7 +249,7 @@ max_bullet = 1 # 最大弾数 (BRT武器のみ)
 consume_value = 10 # 消費値 (HP, MP, HPMP武器のみ。HPMP武器ではHPコスト)
 consume_value2 = 0 # 消費値2 (HPMP武器のみ。HPMP武器ではMPコスト)
 recast_timer = 2 # リキャストタイマー
-recast_timer_type = "SOLO" # リキャストタイマータイプ(NONE, SOLO, GCD, SINK_X。Xは10進数数値)
+recast_timer_type = "SOLO" # リキャストタイマータイプ(NONE, SOLO, GCD, SYNC_X。Xは10進数数値)
 recast_charge_act = false # チャージアクションかどうか
 recast_charge_act_max = 0 # チャージアクションの最大チャージ数
 need_morale = 0 # 必要気力。100以下で必要気力なしと同義
@@ -231,7 +272,7 @@ max_bullet = 1 # 最大弾数 (BRT武器のみ)
 consume_value = 10 # 消費値 (HP, MP, HPMP武器のみ。HPMP武器ではHPコスト)
 consume_value2 = 0 # 消費値2 (HPMP武器のみ。HPMP武器ではMPコスト)
 recast_timer = 2 # リキャストタイマー
-recast_timer_type = "SOLO" # リキャストタイマータイプ(NONE, SOLO, GCD, SINK_X。Xは10進数数値)
+recast_timer_type = "SOLO" # リキャストタイマータイプ(NONE, SOLO, GCD, SYNC_X。Xは10進数数値)
 recast_charge_act = false # チャージアクションかどうか
 recast_charge_act_max = 0 # チャージアクションの最大チャージ数
 need_morale = 0 # 必要気力。100以下で必要気力なしと同義
@@ -254,7 +295,7 @@ max_bullet = 1 # 最大弾数 (BRT武器のみ)
 consume_value = 20 # 消費値 (HP, MP, HPMP武器のみ。HPMP武器ではHPコスト)
 consume_value2 = 0 # 消費値2 (HPMP武器のみ。HPMP武器ではMPコスト)
 recast_timer = 3 # リキャストタイマー
-recast_timer_type = "SOLO" # リキャストタイマータイプ(NONE, SOLO, GCD, SINK_X。Xは10進数数値)
+recast_timer_type = "SOLO" # リキャストタイマータイプ(NONE, SOLO, GCD, SYNC_X。Xは10進数数値)
 recast_charge_act = false # チャージアクションかどうか
 recast_charge_act_max = 0 # チャージアクションの最大チャージ数
 need_morale = 0 # 必要気力。100以下で必要気力なしと同義
@@ -277,7 +318,7 @@ max_bullet = 1 # 最大弾数 (BRT武器のみ)
 consume_value = 20 # 消費値 (HP, MP, HPMP武器のみ。HPMP武器ではHPコスト)
 consume_value2 = 0 # 消費値2 (HPMP武器のみ。HPMP武器ではMPコスト)
 recast_timer = 3 # リキャストタイマー
-recast_timer_type = "SOLO" # リキャストタイマータイプ(NONE, SOLO, GCD, SINK_X。Xは10進数数値)
+recast_timer_type = "SOLO" # リキャストタイマータイプ(NONE, SOLO, GCD, SYNC_X。Xは10進数数値)
 recast_charge_act = false # チャージアクションかどうか
 recast_charge_act_max = 0 # チャージアクションの最大チャージ数
 need_morale = 0 # 必要気力。100以下で必要気力なしと同義
@@ -300,7 +341,7 @@ max_bullet = 1 # 最大弾数 (BRT武器のみ)
 consume_value = 20 # 消費値 (HP, MP, HPMP武器のみ。HPMP武器ではHPコスト)
 consume_value2 = 0 # 消費値2 (HPMP武器のみ。HPMP武器ではMPコスト)
 recast_timer = 3 # リキャストタイマー
-recast_timer_type = "SOLO" # リキャストタイマータイプ(NONE, SOLO, GCD, SINK_X。Xは10進数数値)
+recast_timer_type = "SOLO" # リキャストタイマータイプ(NONE, SOLO, GCD, SYNC_X。Xは10進数数値)
 recast_charge_act = false # チャージアクションかどうか
 recast_charge_act_max = 0 # チャージアクションの最大チャージ数
 need_morale = 0 # 必要気力。100以下で必要気力なしと同義
@@ -327,7 +368,7 @@ max_bullet = 1 # 最大弾数 (BRT武器のみ)
 consume_value = 200 # 消費値 (HP, MP, HPMP武器のみ。HPMP武器ではHPコスト)
 consume_value2 = 20 # 消費値2 (HPMP武器のみ。HPMP武器ではMPコスト)
 recast_timer = 3 # リキャストタイマー
-recast_timer_type = "SINK_0" # リキャストタイマータイプ(NONE, SOLO, GCD, SINK_X。Xは10進数数値)
+recast_timer_type = "SYNC_0" # リキャストタイマータイプ(NONE, SOLO, GCD, SYNC_X。Xは10進数数値)
 recast_charge_act = true # チャージアクションかどうか
 recast_charge_act_max = 2 # チャージアクションの最大チャージ数
 need_morale = 110 # 必要気力。100以下で必要気力なしと同義

@@ -366,6 +366,8 @@ FodyWeavers.xsd
 in-draft/
 !*.png
 # 音楽は容量食いすぎバカタレなので除外
+assets/audio/
+assets/sound/
 *.ogg
 *.mp3
 *.wav

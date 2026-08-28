@@ -1,9 +1,22 @@
-#include "pch.hpp"
+﻿#include "pch.hpp"
 #include "AudioPlayer.hpp"
 #include "ImageLoader.hpp"
 #include "Win32Window.hpp"
 #include "VulkanRenderer.hpp"
+#include "Main.hpp"
+
+#include <Windows.h>
+#include <chrono>
+#include <cstdint>
 #include <exception>
+#include <filesystem>
+#include <sal.h>
+#include <sstream>
+#include <stdexcept>
+#include <vector>
+#include "TRExLap2Unit.hpp"
+#include "TRExLap2UnitEffect.hpp"
+#include <string>
 
 namespace {
 	constexpr wchar_t kWindowTitle[] = L"TRExLap2 on SRPG";
@@ -111,4 +124,59 @@ int WINAPI wWinMain(
 	}
 
 	return 0;
+}
+
+void TRExLap2GameMain::initUnitDictionary()
+{
+}
+
+void TRExLap2GameMain::initUnitEffectDictionary()
+{
+	// 始原の火の残光
+	this->unitEffectDictionary.insert_or_assign(u8"the_cindercurse", []() {
+		return TRExLap2UnitEffect(
+			[](TRExLap2IngameUnit& unit) -> bool { return true; },
+			[](TRExLap2IngameUnit& unit) -> bool { return false; },
+			[](TRExLap2UnitEffect& effect) { /* 実行される内容はないようです */ },
+			u8"始原の火の残光", u8"The Cinder's Curse",
+			{u8"気力130以上で与ダメージ1.2倍、被ダメージ1.4倍"}, {
+				u8"With 130 or more Morale, damage dealt is multiplied by 1.2,",
+				u8" and damage received is multiplied by 1.4"});
+	});
+	// ダミー能力
+	this->unitEffectDictionary.insert_or_assign(u8"dummy_effect", []() {
+		return TRExLap2UnitEffect(
+			[](TRExLap2IngameUnit& unit) -> bool { return true; },
+			[](TRExLap2IngameUnit& unit) -> bool { return false; },
+			[](TRExLap2UnitEffect& effect) { /* 実行される内容はないようです */ },
+			u8"ダミー能力", u8"Dummy Effect",
+			{ u8"これはダミー能力です。" }, {
+				u8"This is a dummy effect." });
+	});
+}
+
+void TRExLap2GameMain::initUnitSkillDictionary()
+{
+	this->unitSkillDictionary.insert_or_assign(u8"infight", []() {
+		// TODO:return TRExLap2UnitSkill();
+	});
+}
+
+TRExLap2UnitEffect TRExLap2GameMain::getUnitEffectById(std::u8string effectId)
+{
+	const bool hasEffect = this->unitEffectDictionary.contains(effectId);
+	return hasEffect ? this->unitEffectDictionary.at(effectId)()
+		: this->unitEffectDictionary.at(u8"dummy_effect")();
+}
+
+TRExLap2GameMain::TRExLap2GameMain()
+{
+	this->initUnitEffectDictionary();
+	this->initUnitSkillDictionary();
+	this->initUnitDictionary();
+}
+
+TRExLap2GameMain::~TRExLap2GameMain()
+{
+	this->unitDictionary.clear();
 }
