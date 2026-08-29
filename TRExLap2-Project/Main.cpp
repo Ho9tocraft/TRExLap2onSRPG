@@ -5,7 +5,7 @@
 #include "VulkanRenderer.hpp"
 #include "Main.hpp"
 
-#include <Windows.h>
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <exception>
@@ -13,15 +13,18 @@
 #include <sal.h>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <vector>
+#include <Windows.h>
 #include "TRExLap2Unit.hpp"
 #include "TRExLap2UnitEffect.hpp"
-#include <string>
 
 namespace {
 	constexpr wchar_t kWindowTitle[] = L"TRExLap2 on SRPG";
 
-	/** 実行ファイルの配置先を取得し、作業ディレクトリに依存しないアセット探索に使う。 */
+	/// <summary>
+	/// 実行ファイルの配置先を取得し、作業ディレクトリに依存しないアセット探索に使う。
+	/// </summary>
 	std::filesystem::path GetExecutableDirectory()
 	{
 		std::vector<wchar_t> pathBuffer(MAX_PATH);
@@ -68,10 +71,9 @@ int WINAPI wWinMain(
 
 		while (window.ProcessMessages())
 		{
-			/** 初回イントロ終了後に、タグ付きOGGの反復範囲へ切り替える。 */
-			bgm.UpdateLooping();
-
-			/** WM_SIZEを受けたフレームでだけ、Swapchain依存資源を作り直す。 */
+			/// <summary>
+			/// WM_SIZEを受けたフレームでだけ、Swapchain依存資源を作り直す。
+			/// </summary>
 			if (window.ConsumeResize() && !window.IsMinimized())
 			{
 				renderer.RecreateSwapchain(
@@ -81,10 +83,14 @@ int WINAPI wWinMain(
 
 			if (!window.IsMinimized())
 			{
-				/** 画像付き矩形を描画する。後でSRPGマップとUI描画をここへ追加する。 */
+				/// <summary>
+				/// 画像付き矩形を描画する。後でSRPGマップとUI描画をここへ追加する。
+				/// </summary>
 				renderer.DrawFrame();
 
-				/** 再生開始直後の位置がLOOPSTARTより前であることを確認し、イントロの再生を保証する。 */
+				/// <summary>
+				/// 再生開始直後の位置がLOOPSTARTより前であることを確認し、イントロの再生を保証する。
+				/// </summary>
 				if (!introVerified && std::chrono::steady_clock::now() >= introVerificationTime)
 				{
 					const std::uint64_t playbackPosition = bgm.GetPlaybackPositionMilliseconds();
@@ -96,7 +102,9 @@ int WINAPI wWinMain(
 					OutputDebugStringA("[Audio] Logos intro playback from the file start verified.\n");
 				}
 
-				/** OGGの最初のループ終端通過後、再生位置がタグ区間へ戻ったことを一度だけ確認する。 */
+				/// <summary>
+				/// OGGの最初のループ終端通過後、再生位置がタグ区間へ戻ったことを一度だけ確認する。
+				/// </summary>
 				if (!taggedLoopVerified && std::chrono::steady_clock::now() >= taggedLoopVerificationTime)
 				{
 					const std::uint64_t playbackPosition = bgm.GetPlaybackPositionMilliseconds();
@@ -127,8 +135,7 @@ int WINAPI wWinMain(
 }
 
 void TRExLap2GameMain::initUnitDictionary()
-{
-}
+{}
 
 void TRExLap2GameMain::initUnitEffectDictionary()
 {
@@ -139,10 +146,10 @@ void TRExLap2GameMain::initUnitEffectDictionary()
 			[](TRExLap2IngameUnit& unit) -> bool { return false; },
 			[](TRExLap2UnitEffect& effect) { /* 実行される内容はないようです */ },
 			u8"始原の火の残光", u8"The Cinder's Curse",
-			{u8"気力130以上で与ダメージ1.2倍、被ダメージ1.4倍"}, {
+			{ u8"気力130以上で与ダメージ1.2倍、被ダメージ1.4倍" }, {
 				u8"With 130 or more Morale, damage dealt is multiplied by 1.2,",
-				u8" and damage received is multiplied by 1.4"});
-	});
+				u8" and damage received is multiplied by 1.4" });
+		});
 	// ダミー能力
 	this->unitEffectDictionary.insert_or_assign(u8"dummy_effect", []() {
 		return TRExLap2UnitEffect(
@@ -150,16 +157,46 @@ void TRExLap2GameMain::initUnitEffectDictionary()
 			[](TRExLap2IngameUnit& unit) -> bool { return false; },
 			[](TRExLap2UnitEffect& effect) { /* 実行される内容はないようです */ },
 			u8"ダミー能力", u8"Dummy Effect",
-			{ u8"これはダミー能力です。" }, {
-				u8"This is a dummy effect." });
-	});
+			{ u8"これはダミー能力です。" },
+			{ u8"This is a dummy effect." });
+		});
 }
 
 void TRExLap2GameMain::initUnitSkillDictionary()
 {
 	this->unitSkillDictionary.insert_or_assign(u8"infight", []() {
-		// TODO:return TRExLap2UnitSkill();
-	});
+		return TRExLap2UnitSkill(
+			[](TRExLap2IngameUnit& unit, TRExLap2UnitSkill& skill) {
+				// 格闘武器攻撃力補正・移動力補正を反映する。
+				const int64_t skillLevel = skill.getSkillLevel(unit.getLevel());
+				unit.approveWeaponMeleeATKFixed(u8"infight", 50 * skillLevel);
+				unit.approveMovementRangeFixed(u8"infight", skillLevel >= 4LL ? ((skillLevel - 1LL) / 3LL) : 0LL);
+				return true;
+			},
+			[](TRExLap2IngameUnit& unit, TRExLap2UnitSkill& skill) {
+				// unitとskillは使用しない。
+				return true;
+			},
+			true, u8"インファイト", u8"Infight",
+			{ u8"スキルレベルに応じて、格闘武器の攻撃力が+50増加。",
+				u8"スキルレベル4以上で、それを3で割った余りが1の場合に、それぞれで更に移動力+1(累積可)。" },
+			{ u8"Attack power of melee weapons increases by +50 according to level.",
+				u8"At Lv4 and Lv7, movement +1 (the increase per level accumulates)." });
+
+		});
+	this->unitSkillDictionary.insert_or_assign(u8"dummy_skill", []() {
+		return TRExLap2UnitSkill(
+			[](TRExLap2IngameUnit& unit, TRExLap2UnitSkill& skill) {
+				return true;
+			},
+			[](TRExLap2IngameUnit& unit, TRExLap2UnitSkill& skill) {
+				// ダミーなので、unitとskillは使用しない。また、常時false。
+				return false;
+			},
+			true, u8"ダミースキル", u8"Dummy Skill",
+			{ u8"これはダミースキルです。" },
+			{ u8"This is a dummy skill." });
+		});
 }
 
 TRExLap2UnitEffect TRExLap2GameMain::getUnitEffectById(std::u8string effectId)
@@ -167,6 +204,13 @@ TRExLap2UnitEffect TRExLap2GameMain::getUnitEffectById(std::u8string effectId)
 	const bool hasEffect = this->unitEffectDictionary.contains(effectId);
 	return hasEffect ? this->unitEffectDictionary.at(effectId)()
 		: this->unitEffectDictionary.at(u8"dummy_effect")();
+}
+
+TRExLap2UnitSkill TRExLap2GameMain::getUnitSkillById(std::u8string skillId)
+{
+	const bool hasSkill = this->unitSkillDictionary.contains(skillId);
+	return hasSkill ? this->unitSkillDictionary.at(skillId)()
+		: this->unitSkillDictionary.at(u8"dummy_skill")();
 }
 
 TRExLap2GameMain::TRExLap2GameMain()

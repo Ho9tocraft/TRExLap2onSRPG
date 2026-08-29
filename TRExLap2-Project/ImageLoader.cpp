@@ -6,7 +6,9 @@
 
 namespace
 {
-/** COM API失敗を、呼び出し式とHRESULTを含む例外として送出する。 */
+/// <summary>
+/// COM API失敗を、呼び出し式とHRESULTを含む例外として送出する。
+/// </summary>
 [[noreturn]] void ThrowIfFailed(HRESULT result, std::string_view expression)
 {
 	std::ostringstream message;
@@ -14,24 +16,32 @@ namespace
 	throw std::runtime_error(message.str());
 }
 
-/** HRESULTが失敗値なら画像読込を中断する。 */
+/// <summary>
+/// HRESULTが失敗値なら画像読込を中断する。
+/// </summary>
 void CheckHr(HRESULT result, std::string_view expression)
 {
 	if (FAILED(result)) ThrowIfFailed(result, expression);
 }
 
-/** 現在のスレッドでWICを利用する間だけ、MTA COMアパートメントを初期化する。 */
+/// <summary>
+/// 現在のスレッドでWICを利用する間だけ、MTA COMアパートメントを初期化する。
+/// </summary>
 class ComApartment final
 {
 public:
-	/** COMをMTAとして初期化し、失敗時は画像読込を中断する。 */
+	/// <summary>
+	/// COMをMTAとして初期化し、失敗時は画像読込を中断する。
+	/// </summary>
 	ComApartment()
 		: result_(CoInitializeEx(nullptr, COINIT_MULTITHREADED))
 	{
 		CheckHr(result_, "CoInitializeEx(nullptr, COINIT_MULTITHREADED)");
 	}
 
-	/** このインスタンスが行ったCOM初期化を対応するCoUninitializeで解放する。 */
+	/// <summary>
+	/// このインスタンスが行ったCOM初期化を対応するCoUninitializeで解放する。
+	/// </summary>
 	~ComApartment()
 	{
 		CoUninitialize();
@@ -45,7 +55,9 @@ private:
 };
 }
 
-/** PNGなどWIC対応画像を読み込み、32-bit RGBAへ統一して返す。 */
+/// <summary>
+/// PNGなどWIC対応画像を読み込み、32-bit RGBAへ統一して返す。
+/// </summary>
 ImageRgba8 ImageLoader::LoadRgba8(const std::filesystem::path& filePath)
 {
 	ComApartment comApartment;

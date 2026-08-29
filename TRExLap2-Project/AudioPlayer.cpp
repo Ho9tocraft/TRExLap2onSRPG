@@ -1,37 +1,32 @@
-#include "pch.hpp"
+﻿#include "pch.hpp"
 #include "AudioPlayer.hpp"
+
+#include <tuple>
+#include <xaudio2.h>
+
+#define STB_VORBIS_HEADER_ONLY
+#include "tp/stb_vorbis.c"
 
 namespace
 {
-	std::atomic_uint64_t gAudioPlayerSerial = 0;
-
-	/** MCIコマンドでファイルパスを安全に引用符で囲む。 */
-	std::wstring QuoteMciPath(const std::filesystem::path& filePath)
+	/// <summary>HRESULT失敗をAPI名付きの例外へ変換する。</summary>
+	void ThrowIfFailed(const HRESULT result, const char* const apiName)
 	{
-		return L"\"" + filePath.wstring() + L"\"";
+		if (SUCCEEDED(result)) return;
+		std::ostringstream message;
+		message << apiName << " failed. HRESULT=0x" << std::hex << static_cast<std::uint32_t>(result);
+		throw std::runtime_error(message.str());
 	}
 
-	/** WindowsのUTF-16エラー文字列を例外メッセージ用のUTF-8へ変換する。 */
-	std::string WideToUtf8(const std::wstring_view text)
-	{
-		if (text.empty()) return {};
-		const int byteCount = WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0, nullptr, nullptr);
-		std::string result(static_cast<std::size_t>(byteCount), '\0');
-		WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), result.data(), byteCount, nullptr, nullptr);
-		return result;
-	}
-
-	/** バイト列中のリトルエンディアン32bit値を読み取る。 */
+	/// <summary>バイト列中のリトルエンディアン32bit値を読み取る。</summary>
 	std::uint32_t ReadLittleEndian32(const std::vector<std::uint8_t>& data, const std::size_t offset)
 	{
 		if (offset + 4 > data.size()) throw std::runtime_error("The OGG metadata is truncated.");
-		return static_cast<std::uint32_t>(data[offset])
-			| (static_cast<std::uint32_t>(data[offset + 1]) << 8)
-			| (static_cast<std::uint32_t>(data[offset + 2]) << 16)
-			| (static_cast<std::uint32_t>(data[offset + 3]) << 24);
+		return static_cast<std::uint32_t>(data[offset]) | (static_cast<std::uint32_t>(data[offset + 1]) << 8)
+			| (static_cast<std::uint32_t>(data[offset + 2]) << 16) | (static_cast<std::uint32_t>(data[offset + 3]) << 24);
 	}
 
-	/** VorbisコメントからLOOPSTARTとLOOPLENGTHを一度の走査で取得する。 */
+	/// <summary>VorbisコメントからLOOPSTARTとLOOPLENGTHを取得する。</summary>
 	std::pair<std::optional<std::uint64_t>, std::optional<std::uint64_t>> ReadVorbisLoopTags(const std::vector<std::uint8_t>& packet, std::size_t& offset)
 	{
 		const std::uint32_t commentCount = ReadLittleEndian32(packet, offset);
@@ -57,8 +52,8 @@ namespace
 		return { loopStart, loopLength };
 	}
 
-	/** OGGページを辿り、VorbisのサンプルレートとLOOPSTART/LOOPLENGTHをミリ秒区間へ変換する。 */
-	std::optional<std::pair<std::uint64_t, std::uint64_t>> ReadOggLoopRangeMilliseconds(const std::filesystem::path& filePath)
+	/// <summary>OGGページを辿り、ループ用サンプル位置とサンプルレートを取得する。</summary>
+	std::optional<std::tuple<std::uint64_t, std::uint64_t, std::uint32_t>> ReadOggLoopTags(const std::filesystem::path& filePath)
 	{
 		if (filePath.extension() != L".ogg") return std::nullopt;
 		std::ifstream file(filePath, std::ios::binary | std::ios::ate);
@@ -68,7 +63,6 @@ namespace
 		std::vector<std::uint8_t> data(static_cast<std::size_t>(byteCount));
 		file.seekg(0); file.read(reinterpret_cast<char*>(data.data()), byteCount);
 		if (!file) throw std::runtime_error("The OGG BGM could not be read completely.");
-
 		std::vector<std::uint8_t> packet;
 		std::uint32_t sampleRate = 0;
 		std::size_t position = 0;
@@ -104,11 +98,8 @@ namespace
 					commentOffset += 4 + vendorLength;
 					if (commentOffset > packet.size()) throw std::runtime_error("The OGG vendor comment is truncated.");
 					const auto [loopStart, loopLength] = ReadVorbisLoopTags(packet, commentOffset);
-					if (!loopStart || !loopLength || sampleRate == 0) return std::nullopt;
-					const std::uint64_t startMilliseconds = (*loopStart * 1000) / sampleRate;
-					const std::uint64_t endMilliseconds = ((*loopStart + *loopLength) * 1000) / sampleRate;
-					if (endMilliseconds <= startMilliseconds) throw std::runtime_error("The OGG loop range is invalid.");
-					return std::pair{ startMilliseconds, endMilliseconds };
+					if (!loopStart || !loopLength || sampleRate == 0 || *loopLength == 0) throw std::runtime_error("The OGG loop tags are invalid.");
+					return std::tuple{ *loopStart, *loopLength, sampleRate };
 				}
 				packet.clear();
 			}
@@ -116,111 +107,137 @@ namespace
 		}
 		throw std::runtime_error("The OGG Vorbis comment packet was not found.");
 	}
-}
 
-/** 音声ファイルをMCIデバイスとして開き、OGGならループタグも解析する。 */
-AudioPlayer::AudioPlayer(const std::filesystem::path& filePath)
-	: loopRangeMilliseconds_(ReadOggLoopRangeMilliseconds(filePath)), alias_(L"TRExLap2Bgm" + std::to_wstring(++gAudioPlayerSerial))
-{
-	if (!std::filesystem::exists(filePath))
+	/// <summary>stb_vorbisでOGG Vorbisを16bit PCMへ全量デコードする。</summary>
+	std::vector<std::uint8_t> DecodePcm16(const std::filesystem::path& filePath, WAVEFORMATEX& waveFormat)
 	{
-		throw std::runtime_error("BGM file was not found: " + filePath.string());
+		std::ifstream file(filePath, std::ios::binary | std::ios::ate);
+		if (!file) throw std::runtime_error("The OGG BGM could not be opened for decoding.");
+		const std::streamsize byteCount = file.tellg();
+		if (byteCount <= 0 || byteCount > std::numeric_limits<int>::max()) throw std::runtime_error("The OGG BGM has an unsupported size.");
+		std::vector<std::uint8_t> encodedData(static_cast<std::size_t>(byteCount));
+		file.seekg(0); file.read(reinterpret_cast<char*>(encodedData.data()), byteCount);
+		if (!file) throw std::runtime_error("The OGG BGM could not be read completely.");
+		int decoderError = 0;
+		stb_vorbis* const decoder = stb_vorbis_open_memory(encodedData.data(), static_cast<int>(encodedData.size()), &decoderError, nullptr);
+		if (!decoder) throw std::runtime_error("stb_vorbis could not open the OGG BGM. Error=" + std::to_string(decoderError));
+		const stb_vorbis_info info = stb_vorbis_get_info(decoder);
+		const int totalFrames = stb_vorbis_stream_length_in_samples(decoder);
+		if (info.channels <= 0 || info.sample_rate <= 0 || totalFrames <= 0) { stb_vorbis_close(decoder); throw std::runtime_error("The OGG BGM has invalid PCM format information."); }
+		waveFormat = { WAVE_FORMAT_PCM, static_cast<WORD>(info.channels), info.sample_rate, static_cast<DWORD>(info.sample_rate * info.channels * sizeof(std::int16_t)), static_cast<WORD>(info.channels * sizeof(std::int16_t)), 16, 0 };
+		std::vector<std::int16_t> samples(static_cast<std::size_t>(totalFrames) * static_cast<std::size_t>(info.channels));
+		int decodedFrames = 0;
+		while (decodedFrames < totalFrames)
+		{
+			const int frames = stb_vorbis_get_samples_short_interleaved(decoder, info.channels, samples.data() + static_cast<std::size_t>(decodedFrames) * info.channels, (totalFrames - decodedFrames) * info.channels);
+			if (frames <= 0) break;
+			decodedFrames += frames;
+		}
+		stb_vorbis_close(decoder);
+		samples.resize(static_cast<std::size_t>(decodedFrames) * static_cast<std::size_t>(info.channels));
+		if (samples.empty()) throw std::runtime_error("The OGG decoder produced no PCM samples.");
+		std::vector<std::uint8_t> pcmData(samples.size() * sizeof(std::int16_t));
+		std::memcpy(pcmData.data(), samples.data(), pcmData.size());
+		return pcmData;
 	}
-
-	SendCommand(L"open " + QuoteMciPath(filePath) + L" type mpegvideo alias " + alias_);
-	isOpen_ = true;
 }
 
-/** 再生を止め、MCIデバイスを閉じる。 */
-AudioPlayer::~AudioPlayer()
+/// <summary>音声をPCMへデコードし、XAudio2によるシームレスなループ再生を準備する。</summary>
+AudioPlayer::AudioPlayer(const std::filesystem::path& filePath)
 {
-	CloseNoThrow();
+	if (!std::filesystem::exists(filePath)) throw std::runtime_error("BGM file was not found: " + filePath.string());
+	try
+	{
+		const auto loopTags = ReadOggLoopTags(filePath);
+		WAVEFORMATEX waveFormat{};
+		pcmData_ = DecodePcm16(filePath, waveFormat);
+		sampleRate_ = waveFormat.nSamplesPerSec;
+		const std::uint64_t totalSamples = pcmData_.size() / waveFormat.nBlockAlign;
+		if (loopTags)
+		{
+			const auto [loopStart, loopLength, tagSampleRate] = *loopTags;
+			if (tagSampleRate != sampleRate_ || loopStart >= totalSamples || loopLength > totalSamples - loopStart) throw std::runtime_error("The OGG loop tag range does not fit decoded PCM data.");
+			loopStartSamples_ = loopStart;
+			loopLengthSamples_ = loopLength;
+			loopRangeMilliseconds_ = std::pair{ (loopStart * 1000) / sampleRate_, ((loopStart + loopLength) * 1000) / sampleRate_ };
+		}
+		else { loopStartSamples_ = 0; loopLengthSamples_ = totalSamples; }
+		ThrowIfFailed(XAudio2Create(&xaudio2_), "XAudio2Create");
+		ThrowIfFailed(xaudio2_->CreateMasteringVoice(&masteringVoice_), "IXAudio2::CreateMasteringVoice");
+		ThrowIfFailed(xaudio2_->CreateSourceVoice(&sourceVoice_, &waveFormat), "IXAudio2::CreateSourceVoice");
+	}
+	catch (...) { ReleaseNoThrow(); throw; }
 }
 
-/** タグ付きOGGはイントロを含む先頭からLOOPENDまで、その他は通常の無限ループとして再生する。 */
+/// <summary>XAudio2およびMedia Foundationの資源を解放する。</summary>
+AudioPlayer::~AudioPlayer() { ReleaseNoThrow(); }
+
+/// <summary>PCM全体を一度だけ送信し、タグ範囲またはファイル全体をXAudio2内部で無限反復する。</summary>
 void AudioPlayer::PlayLooping()
 {
-	taggedLoopRepeatStarted_ = false;
-	std::wstring command = L"play " + alias_;
-	if (loopRangeMilliseconds_)
-	{
-		command += L" from 0 to " + std::to_wstring(loopRangeMilliseconds_->second);
-		SendCommand(command);
-	}
-	else SendCommand(command + L" repeat");
-	if (!IsPlaying()) throw std::runtime_error("MCI accepted the BGM play command but did not enter the playing state.");
+	if (playbackStarted_) return;
+	XAUDIO2_BUFFER buffer{};
+	buffer.AudioBytes = static_cast<UINT32>(pcmData_.size());
+	buffer.pAudioData = pcmData_.data();
+	buffer.LoopBegin = static_cast<UINT32>(loopStartSamples_);
+	buffer.LoopLength = static_cast<UINT32>(loopLengthSamples_);
+	buffer.LoopCount = XAUDIO2_LOOP_INFINITE;
+	ThrowIfFailed(sourceVoice_->SubmitSourceBuffer(&buffer), "IXAudio2SourceVoice::SubmitSourceBuffer");
+	ThrowIfFailed(sourceVoice_->Start(), "IXAudio2SourceVoice::Start");
+	playbackStarted_ = true;
 }
 
-/** 初回のイントロ再生が停止した時点で、LOOPSTARTからLOOPENDまでの反復再生へ移行する。 */
-void AudioPlayer::UpdateLooping()
+/// <summary>XAudio2のループは音声スレッドで処理されるため、フレーム更新は不要である。</summary>
+void AudioPlayer::UpdateLooping() noexcept {}
+
+/// <summary>ソースボイスが開始済みで、かつキューにPCMバッファが残っているかを返す。</summary>
+bool AudioPlayer::IsPlaying() const noexcept
 {
-	if (!loopRangeMilliseconds_ || taggedLoopRepeatStarted_ || IsPlaying()) return;
-	const std::wstring command = L"play " + alias_
-		+ L" from " + std::to_wstring(loopRangeMilliseconds_->first)
-		+ L" to " + std::to_wstring(loopRangeMilliseconds_->second)
-		+ L" repeat";
-	SendCommand(command);
-	if (!IsPlaying()) throw std::runtime_error("MCI did not enter the tagged OGG repeat state.");
-	taggedLoopRepeatStarted_ = true;
+	if (!sourceVoice_ || !playbackStarted_) return false;
+	XAUDIO2_VOICE_STATE state{};
+	sourceVoice_->GetState(&state, XAUDIO2_VOICE_NOSAMPLESPLAYED);
+	return state.BuffersQueued != 0;
 }
 
-/** MCIのmode問い合わせを用いて、実際の再生開始状態を検証する。 */
-bool AudioPlayer::IsPlaying() const
-{
-	std::array<wchar_t, 32> mode{};
-	SendCommand(L"status " + alias_ + L" mode", mode.data(), static_cast<std::uint32_t>(mode.size()));
-	return std::wstring_view(mode.data()) == L"playing";
-}
+/// <summary>タグ付きOGGとしてループ範囲を構成したかを返す。</summary>
+bool AudioPlayer::UsesTaggedLoop() const noexcept { return loopRangeMilliseconds_.has_value(); }
 
-/** OGGのLOOPSTART/LOOPLENGTHから再生区間を構成したかを返す。 */
-bool AudioPlayer::UsesTaggedLoop() const noexcept
-{
-	return loopRangeMilliseconds_.has_value();
-}
-
-/** 初回イントロの後にタグ付きループ範囲へ移行したかを返す。 */
+/// <summary>初回イントロの終端を越え、XAudio2がタグ反復区間を再生中かを返す。</summary>
 bool AudioPlayer::IsTaggedLoopRepeatPlaying() const noexcept
 {
-	return taggedLoopRepeatStarted_;
+	if (!sourceVoice_ || !UsesTaggedLoop()) return false;
+	XAUDIO2_VOICE_STATE state{};
+	sourceVoice_->GetState(&state);
+	return state.SamplesPlayed >= loopStartSamples_ + loopLengthSamples_;
 }
 
-/** MCIのposition問い合わせを整数ミリ秒として返す。 */
-std::uint64_t AudioPlayer::GetPlaybackPositionMilliseconds() const
+/// <summary>XAudio2の総再生サンプル数を、元ファイル内の現在位置へ換算する。</summary>
+std::uint64_t AudioPlayer::GetPlaybackPositionMilliseconds() const noexcept
 {
-	std::array<wchar_t, 32> position{};
-	SendCommand(L"status " + alias_ + L" position", position.data(), static_cast<std::uint32_t>(position.size()));
-	try { return std::stoull(position.data()); }
-	catch (const std::exception&) { throw std::runtime_error("MCI returned a non-numeric playback position."); }
+	if (!sourceVoice_ || sampleRate_ == 0) return 0;
+	XAUDIO2_VOICE_STATE state{};
+	sourceVoice_->GetState(&state);
+	std::uint64_t samplePosition = state.SamplesPlayed;
+	const std::uint64_t loopEnd = loopStartSamples_ + loopLengthSamples_;
+	if (samplePosition >= loopEnd && loopLengthSamples_ != 0) samplePosition = loopStartSamples_ + ((samplePosition - loopEnd) % loopLengthSamples_);
+	return (samplePosition * 1000) / sampleRate_;
 }
 
-/** OGGのループタグから構成した再生区間を返す。 */
-const std::optional<std::pair<std::uint64_t, std::uint64_t>>& AudioPlayer::GetTaggedLoopRangeMilliseconds() const noexcept
+/// <summary>OGGタグ由来のミリ秒単位のループ範囲を返す。</summary>
+const std::optional<std::pair<std::uint64_t, std::uint64_t>>& AudioPlayer::GetTaggedLoopRangeMilliseconds() const noexcept { return loopRangeMilliseconds_; }
+
+/// <summary>ソースボイスを停止する。</summary>
+void AudioPlayer::Stop() noexcept
 {
-	return loopRangeMilliseconds_;
+	if (sourceVoice_) sourceVoice_->Stop();
+	playbackStarted_ = false;
 }
 
-/** MCIデバイスを停止する。 */
-void AudioPlayer::Stop() const
+/// <summary>破棄順序を守って音声再生資源を解放する。</summary>
+void AudioPlayer::ReleaseNoThrow() noexcept
 {
-	SendCommand(L"stop " + alias_);
-}
-
-/** MCIエラー文字列を含め、音声処理の失敗理由を呼び出し元へ伝える。 */
-void AudioPlayer::SendCommand(const std::wstring& command, wchar_t* resultBuffer, std::uint32_t resultBufferLength) const
-{
-	const MCIERROR result = mciSendStringW(command.c_str(), resultBuffer, resultBufferLength, nullptr);
-	if (result == 0) return;
-
-	std::array<wchar_t, 256> errorMessage{};
-	mciGetErrorStringW(result, errorMessage.data(), static_cast<UINT>(errorMessage.size()));
-	throw std::runtime_error("MCI command failed: " + WideToUtf8(command) + " (" + WideToUtf8(errorMessage.data()) + ")");
-}
-
-/** 例外を許容できないデストラクタから、音声デバイスを確実に閉じる。 */
-void AudioPlayer::CloseNoThrow() noexcept
-{
-	if (!isOpen_) return;
-	mciSendStringW((L"stop " + alias_).c_str(), nullptr, 0, nullptr);
-	mciSendStringW((L"close " + alias_).c_str(), nullptr, 0, nullptr);
-	isOpen_ = false;
+	Stop();
+	if (sourceVoice_) { sourceVoice_->DestroyVoice(); sourceVoice_ = nullptr; }
+	if (masteringVoice_) { masteringVoice_->DestroyVoice(); masteringVoice_ = nullptr; }
+	if (xaudio2_) { xaudio2_->Release(); xaudio2_ = nullptr; }
 }

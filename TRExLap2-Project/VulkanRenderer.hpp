@@ -14,11 +14,11 @@
 #define TREXLAP2_DEBUG_TOOLS 0
 #endif // !TREXLAP2_DEBUG_TOOLS
 
-/**
- * @brief Win32ウィンドウにVulkan 1.3の描画結果を提示する最小レンダラ。
- *
- * Dynamic Renderingでスワップチェーン画像をクリアし、RGBA8テクスチャを描画する。
- */
+/// <summary>
+/// Win32ウィンドウにVulkan 1.3の描画結果を提示する最小レンダラ。
+///
+/// Dynamic Renderingでスワップチェーン画像をクリアし、RGBA8テクスチャを描画する。
+/// </summary>
 class VulkanRenderer final
 {
 public:
@@ -30,17 +30,25 @@ public:
 	VulkanRenderer(VulkanRenderer&&) = delete;
 	VulkanRenderer& operator=(VulkanRenderer&&) = delete;
 
-	/** @brief 1フレームを取得、クリア、GPU送信、画面提示する。 */
+	/// <summary>
+	/// 1フレームを取得、クリア、GPU送信、画面提示する。
+	/// </summary>
 	void DrawFrame();
 
-	/** @brief ウィンドウリサイズ後にスワップチェーン依存資源を作り直す。 */
+	/// <summary>
+	/// ウィンドウリサイズ後にスワップチェーン依存資源を作り直す。
+	/// </summary>
 	void RecreateSwapchain(std::uint32_t width, std::uint32_t height);
 
-	/** @brief GPUの完了を待つ。破棄やスワップチェーン再生成の直前に使う。 */
+	/// <summary>
+	/// GPUの完了を待つ。破棄やスワップチェーン再生成の直前に使う。
+	/// </summary>
 	void WaitUntilIdle() const;
 
 private:
-	/** TAA履歴をフレーム間で安全に共有するため、現段階は1フレームずつ完了させる。 */
+	/// <summary>
+	/// TAA履歴をフレーム間で安全に共有するため、現段階は1フレームずつ完了させる。
+	/// </summary>
 	static constexpr std::uint32_t kMaxFramesInFlight = 1;
 
 	struct QueueFamilyIndices
@@ -60,13 +68,19 @@ private:
 
 	struct FrameSync
 	{
-		/** スワップチェーン画像を利用可能になった時に通知される。 */
+		/// <summary>
+		/// スワップチェーン画像を利用可能になった時に通知される。
+		/// </summary>
 		VkSemaphore imageAvailable = VK_NULL_HANDLE;
-		/** CPUがこのフレーム用コマンドバッファを再利用するための待機対象。 */
+		/// <summary>
+		/// CPUがこのフレーム用コマンドバッファを再利用するための待機対象。
+		/// </summary>
 		VkFence inFlight = VK_NULL_HANDLE;
 	};
 
-	/** Vertex/Fragment Shaderへ渡す、表示矩形と出力エンコードの設定。 */
+	/// <summary>
+	/// Vertex/Fragment Shaderへ渡す、表示矩形と出力エンコードの設定。
+	/// </summary>
 	struct TextureDrawConstants
 	{
 		float halfWidthNdc = 0.0f;
@@ -75,7 +89,9 @@ private:
 		float historyWeight = 0.0f;
 	};
 
-	/** Swapchainの解像度に従属する、Vulkan画像・メモリ・Viewの所有単位。 */
+	/// <summary>
+	/// Swapchainの解像度に従属する、Vulkan画像・メモリ・Viewの所有単位。
+	/// </summary>
 	struct PostProcessImage
 	{
 		VkImage image = VK_NULL_HANDLE;
@@ -134,12 +150,12 @@ private:
 	void CreateRenderFinishedSemaphores();
 	void DestroyRenderFinishedSemaphores();
 
-	/**
-	 * @brief scene描画後にDLAAまたはTAAを適用し、Swapchainへ提示するコマンドを記録する。
-	 *
-	 * PRESENT/UNDEFINED -> COLOR_ATTACHMENT_OPTIMAL -> PRESENT_SRC_KHR の順で
-	 * 画像レイアウトを遷移させる。
-	 */
+	/// <summary>
+	/// scene描画後にDLAAまたはTAAを適用し、Swapchainへ提示するコマンドを記録する。
+	///
+	/// PRESENT/UNDEFINED -> COLOR_ATTACHMENT_OPTIMAL -> PRESENT_SRC_KHR の順で
+	/// 画像レイアウトを遷移させる。
+	/// </summary>
 	void RecordCommandBuffer(VkCommandBuffer commandBuffer, std::uint32_t imageIndex);
 
 	void DestroySwapchainResources();
@@ -191,23 +207,37 @@ private:
 
 	std::vector<VkImage> swapchainImages_;
 	std::vector<VkImageView> swapchainImageViews_;
-	/** 各スワップチェーン画像を最後に使用したフレームFence。画像の早期再利用を防ぐ。 */
+	/// <summary>
+	/// 各スワップチェーン画像を最後に使用したフレームFence。画像の早期再利用を防ぐ。
+	/// </summary>
 	std::vector<VkFence> imagesInFlight_;
 
 	VkCommandPool commandPool_ = VK_NULL_HANDLE;
 	std::vector<VkCommandBuffer> commandBuffers_;
 
-	/** 単一テクスチャのscene/present描画に使うパイプラインレイアウト。 */
+	/// <summary>
+	/// 単一テクスチャのscene/present描画に使うパイプラインレイアウト。
+	/// </summary>
 	VkPipelineLayout texturePipelineLayout_ = VK_NULL_HANDLE;
-	/** sceneへ透過画像を描画するパイプライン。 */
+	/// <summary>
+	/// sceneへ透過画像を描画するパイプライン。
+	/// </summary>
 	VkPipeline scenePipeline_ = VK_NULL_HANDLE;
-	/** TAA結果をSwapchainへ描画するパイプライン。 */
+	/// <summary>
+	/// TAA結果をSwapchainへ描画するパイプライン。
+	/// </summary>
 	VkPipeline presentPipeline_ = VK_NULL_HANDLE;
-	/** sceneと履歴を同時に読むTAA用パイプラインレイアウト。 */
+	/// <summary>
+	/// sceneと履歴を同時に読むTAA用パイプラインレイアウト。
+	/// </summary>
 	VkPipelineLayout taaPipelineLayout_ = VK_NULL_HANDLE;
-	/** TAA履歴を合成して次の履歴画像へ書き込むパイプライン。 */
+	/// <summary>
+	/// TAA履歴を合成して次の履歴画像へ書き込むパイプライン。
+	/// </summary>
 	VkPipeline taaPipeline_ = VK_NULL_HANDLE;
-	/** WICで復号したRGBA8を保持するDevice Local画像。 */
+	/// <summary>
+	/// WICで復号したRGBA8を保持するDevice Local画像。
+	/// </summary>
 	VkImage textureImage_ = VK_NULL_HANDLE;
 	VkDeviceMemory textureMemory_ = VK_NULL_HANDLE;
 	VkImageView textureImageView_ = VK_NULL_HANDLE;
@@ -219,14 +249,22 @@ private:
 	VkDescriptorSetLayout taaDescriptorSetLayout_ = VK_NULL_HANDLE;
 	VkDescriptorPool taaDescriptorPool_ = VK_NULL_HANDLE;
 	std::array<VkDescriptorSet, 2> taaDescriptorSets_{};
-	/** 元画像の物理ピクセル幅。Swapchain上の1:1表示に使用する。 */
+	/// <summary>
+	/// 元画像の物理ピクセル幅。Swapchain上の1:1表示に使用する。
+	/// </summary>
 	std::uint32_t textureWidth_ = 0;
-	/** 元画像の物理ピクセル高。Swapchain上の1:1表示に使用する。 */
+	/// <summary>
+	/// 元画像の物理ピクセル高。Swapchain上の1:1表示に使用する。
+	/// </summary>
 	std::uint32_t textureHeight_ = 0;
-	/** sceneは線形カラー、履歴はTAAの前フレーム出力を保持する。 */
+	/// <summary>
+	/// sceneは線形カラー、履歴はTAAの前フレーム出力を保持する。
+	/// </summary>
 	PostProcessImage sceneColor_{};
 	std::array<PostProcessImage, 2> taaHistory_{};
-	/** DLSSが有効な環境だけで確保する深度とモーションベクトル。 */
+	/// <summary>
+	/// DLSSが有効な環境だけで確保する深度とモーションベクトル。
+	/// </summary>
 	PostProcessImage dlssDepth_{};
 	PostProcessImage dlssMotionVectors_{};
 	std::uint32_t taaHistoryIndex_ = 0;
@@ -237,7 +275,9 @@ private:
 	bool dlssEnabled_ = false;
 
 	std::array<FrameSync, kMaxFramesInFlight> frameSyncs_{};
-	/** Present待機中の再利用を防ぐため、Swapchain画像ごとに所有する描画完了Semaphore。 */
+	/// <summary>
+	/// Present待機中の再利用を防ぐため、Swapchain画像ごとに所有する描画完了Semaphore。
+	/// </summary>
 	std::vector<VkSemaphore> renderFinishedSemaphores_;
 	std::uint32_t currentFrame_ = 0;
 };

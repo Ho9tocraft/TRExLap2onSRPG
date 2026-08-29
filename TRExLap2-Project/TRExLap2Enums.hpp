@@ -1,5 +1,10 @@
-﻿#pragma once
+#pragma once
 #include <cstdint>
+#include <limits>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <type_traits>
 
 /// <summary>
 /// ユニットの移動タイプを表す列挙型。
@@ -311,4 +316,129 @@ enum class TRExLap2SpiritualsType : std::uint64_t {
 	/// 特殊系 (決意, 想念)
 	/// </summary>
 	EXTRA_SPIRITUALS,
+};
+
+/// <summary>
+/// enum型ごとの値変換仕様を定義する。
+///
+/// 未対応のenum型は特殊化されていないため、変換を要求できない。
+///
+/// </summary>
+/// <typeparam name="EnumT">対象となるenum class型。</typeparam>
+template <typename EnumT>
+struct TRExLap2EnumParser;
+
+/// <summary>
+/// 符号付き整数からenum値への変換を試行する。
+///
+/// </summary>
+/// <typeparam name="EnumT">対象enum型。</typeparam>
+/// <param name="value">変換対象の整数値。</param>
+/// <returns>定義済みenum値ならその値、未定義値ならnullopt。</returns>
+template <typename EnumT>
+	requires std::is_enum_v<EnumT>
+std::optional<EnumT> TryParseEnum(const std::int64_t value)
+{
+	return TRExLap2EnumParser<EnumT>::FromInt(value);
+}
+
+/// <summary>
+/// 符号なし整数からenum値への変換を試行する。
+///
+/// </summary>
+/// <typeparam name="EnumT">対象enum型。</typeparam>
+/// <param name="value">変換対象の整数値。</param>
+/// <returns>定義済みenum値ならその値、未定義値ならnullopt。</returns>
+template <typename EnumT>
+	requires std::is_enum_v<EnumT>
+std::optional<EnumT> TryParseEnum(const std::uint64_t value)
+{
+	if (value > static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()))
+		return std::nullopt;
+
+	return TryParseEnum<EnumT>(static_cast<std::int64_t>(value));
+}
+
+/// <summary>
+/// UTF-8文字列からenum値への変換を試行する。
+///
+/// </summary>
+/// <typeparam name="EnumT">対象enum型。</typeparam>
+/// <param name="value">変換対象のUTF-8文字列。</param>
+/// <returns>定義済みenum値ならその値、未定義値ならnullopt。</returns>
+template <typename EnumT>
+	requires std::is_enum_v<EnumT>
+std::optional<EnumT> TryParseEnum(const std::string_view value)
+{
+	return TRExLap2EnumParser<EnumT>::FromString(value);
+}
+
+/// <summary>
+/// u8string形式のUTF-8文字列からenum値への変換を試行する。
+///
+/// </summary>
+/// <typeparam name="EnumT">対象enum型。</typeparam>
+/// <param name="value">変換対象のUTF-8文字列。</param>
+/// <returns>定義済みenum値ならその値、未定義値ならnullopt。</returns>
+template <typename EnumT>
+	requires std::is_enum_v<EnumT>
+std::optional<EnumT> TryParseEnum(const std::u8string_view value)
+{
+	std::string narrowValue;
+	narrowValue.reserve(value.size());
+
+	for (const char8_t byte : value)
+		narrowValue.push_back(static_cast<char>(byte));
+
+	return TryParseEnum<EnumT>(std::string_view{ narrowValue });
+}
+
+/// <summary>
+/// 移動タイプの変換仕様。
+/// </summary>
+template <>
+struct TRExLap2EnumParser<TRExLap2StageMovableType>
+{
+	static std::optional<TRExLap2StageMovableType> FromInt(std::int64_t value);
+	static std::optional<TRExLap2StageMovableType> FromString(std::string_view value);
+};
+
+/// <summary>
+/// 地形適応の変換仕様。
+/// </summary>
+template <>
+struct TRExLap2EnumParser<TRExLap2TerrainAdapt>
+{
+	static std::optional<TRExLap2TerrainAdapt> FromInt(std::int64_t value);
+	static std::optional<TRExLap2TerrainAdapt> FromString(std::string_view value);
+};
+
+/// <summary>
+/// パイロット性格の変換仕様。
+/// </summary>
+template <>
+struct TRExLap2EnumParser<TRExLap2PilotPersonalityType>
+{
+	static std::optional<TRExLap2PilotPersonalityType> FromInt(std::int64_t value);
+	static std::optional<TRExLap2PilotPersonalityType> FromString(std::string_view value);
+};
+
+/// <summary>
+/// パイロット性別の変換仕様。
+/// </summary>
+template <>
+struct TRExLap2EnumParser<TRExLap2PilotGenderType>
+{
+	static std::optional<TRExLap2PilotGenderType> FromInt(std::int64_t value);
+	static std::optional<TRExLap2PilotGenderType> FromString(std::string_view value);
+};
+
+/// <summary>
+/// 改造タイプの変換仕様。
+/// </summary>
+template <>
+struct TRExLap2EnumParser<TRExLap2ModifyType>
+{
+	static std::optional<TRExLap2ModifyType> FromInt(std::int64_t value);
+	static std::optional<TRExLap2ModifyType> FromString(std::string_view value);
 };

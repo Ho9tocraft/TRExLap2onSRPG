@@ -92,17 +92,33 @@ protected:
 	/// <summary>
 	/// 特殊スキルの実行関数。
 	/// </summary>
-	std::function<bool(TRExLap2IngameUnit&)> skillExecFunction;
+	std::function<bool(TRExLap2IngameUnit&, TRExLap2UnitSkill&)> skillExecFunction;
 	/// <summary>
 	/// 特殊スキルの発動条件関数。
 	/// </summary>
-	std::function<bool(TRExLap2IngameUnit&)> skillCondFunction;
+	std::function<bool(TRExLap2IngameUnit&, TRExLap2UnitSkill&)> skillCondFunction;
 	/// <summary>
 	/// 特殊スキルのID。<para/>
 	/// インスタンス生成直後には設定されない。<para/>
 	/// 命名規則は「(特殊スキルのid)_(それを持つユニットのid)」
 	///	</summary>
 	std::u8string skillId;
+	/// <summary>
+	/// 特殊スキルのデフォルト表示名（日本語）
+	/// </summary>
+	std::u8string skillDefaultDisplayNameJa;
+	/// <summary>
+	/// 特殊スキルのデフォルト表示名（英語）
+	/// </summary>
+	std::u8string skillDefaultDisplayNameEn;
+	/// <summary>
+	/// 特殊スキルの表示名（日本語）。未設定時は空文字列なのでフォールバックされる。
+	/// </summary>
+	std::u8string skillDisplayNameJa;
+	/// <summary>
+	/// 特殊スキルの表示名（英語）。未設定時は空文字列なのでフォールバックされる。
+	/// </summary>
+	std::u8string skillDisplayNameEn;
 	/// <summary>
 	/// 特殊スキルの説明（日本語）
 	/// </summary>
@@ -121,9 +137,13 @@ protected:
 	/// </summary>
 	std::vector<std::pair<std::int64_t, std::int64_t>> skillLevelValues;
 public:
+	bool executeSkill(TRExLap2IngameUnit& unit);
+	bool checkSkillCondition(TRExLap2IngameUnit& unit);
 	void setSkillLearnTiming(std::int64_t skillLevel, std::int64_t unitLevel);
+	std::int64_t getSkillLevel(std::int64_t unitLevel);
 	TRExLap2UnitSkill(
-		std::function<bool(TRExLap2IngameUnit&)> execFunction,
-		std::function<bool(TRExLap2IngameUnit&)> condFunction,
-		bool isSkillHasLevel);
+		std::function<bool(TRExLap2IngameUnit&, TRExLap2UnitSkill&)> execFunction,
+		std::function<bool(TRExLap2IngameUnit&, TRExLap2UnitSkill&)> condFunction,
+		bool isSkillHasLevel, std::u8string defaultDisplayNameJa, std::u8string defaultDisplayNameEn,
+		std::vector<std::u8string> defaultDescJa, std::vector<std::u8string> defaultDescEn);
 };

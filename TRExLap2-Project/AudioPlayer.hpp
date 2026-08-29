@@ -1,58 +1,51 @@
-#pragma once
+﻿#pragma once
 
-/**
- * Win32 MCIを使い、アプリケーションの寿命に結び付いたBGM再生を管理する。
- *
- * MCIはWindows標準のメディアデコーダーを利用し、MP3/OGGを非同期再生する。
- * OGG VorbisにLOOPSTART/LOOPLENGTHタグがある場合は、その区間だけを繰り返す。
- */
+struct IXAudio2;
+struct IXAudio2MasteringVoice;
+struct IXAudio2SourceVoice;
+
+/// <summary>
+/// stb_vorbisでOGG音声をPCMへ展開し、XAudio2へ常駐バッファとして送るBGM再生器。
+/// OGG VorbisのLOOPSTART/LOOPLENGTHタグはXAudio2の単一バッファ内ループとして扱う。
+/// </summary>
 class AudioPlayer final
 {
 public:
-	/** 指定した音声ファイルをMCIで開き、再生可能な状態にする。 */
+	/// <summary>指定した音声をPCMへデコードし、XAudio2のソースボイスを準備する。</summary>
 	explicit AudioPlayer(const std::filesystem::path& filePath);
-
-	/** 再生停止とMCIデバイスのクローズを行い、例外を送出しない。 */
+	/// <summary>再生を停止してXAudio2の資源を解放する。</summary>
 	~AudioPlayer();
-
 	AudioPlayer(const AudioPlayer&) = delete;
 	AudioPlayer& operator=(const AudioPlayer&) = delete;
 	AudioPlayer(AudioPlayer&&) = delete;
 	AudioPlayer& operator=(AudioPlayer&&) = delete;
-
-	/** BGMを非同期で開始する。タグ付きOGGは先頭から最初のLOOPENDまで再生する。 */
+	/// <summary>初回は先頭から再生し、タグ付きOGGはLOOPEND後に指定範囲を無音なしで反復する。</summary>
 	void PlayLooping();
-
-	/** 初回再生の終了を監視し、タグ付きOGGをLOOPSTARTから反復再生へ切り替える。 */
-	void UpdateLooping();
-
-	/** 現在のMCI再生状態がplayingであるかを取得する。 */
-	[[nodiscard]] bool IsPlaying() const;
-
-	/** OGG Vorbisコメントから有効なループ区間を取得できたかを返す。 */
+	/// <summary>互換用の更新口。XAudio2のループは音声スレッド内で完結するため何もしない。</summary>
+	void UpdateLooping() noexcept;
+	/// <summary>XAudio2の再生状態が実行中かを取得する。</summary>
+	[[nodiscard]] bool IsPlaying() const noexcept;
+	/// <summary>有効なOGGループタグを検出したかを返す。</summary>
 	[[nodiscard]] bool UsesTaggedLoop() const noexcept;
-
-	/** 初回イントロ再生を終え、LOOPSTARTからの反復再生へ移行済みかを返す。 */
+	/// <summary>初回イントロを終え、タグ反復区間に入ったかを返す。</summary>
 	[[nodiscard]] bool IsTaggedLoopRepeatPlaying() const noexcept;
-
-	/** 現在のMCI再生位置をミリ秒で取得する。 */
-	[[nodiscard]] std::uint64_t GetPlaybackPositionMilliseconds() const;
-
-	/** OGGタグから変換した開始・終了ミリ秒を返す。タグなしならnulloptを返す。 */
+	/// <summary>現在位置を元ファイル内のミリ秒位置として返す。</summary>
+	[[nodiscard]] std::uint64_t GetPlaybackPositionMilliseconds() const noexcept;
+	/// <summary>タグ由来の開始・終了ミリ秒を返す。タグなしならnullopt。</summary>
 	[[nodiscard]] const std::optional<std::pair<std::uint64_t, std::uint64_t>>& GetTaggedLoopRangeMilliseconds() const noexcept;
-
-	/** 再生を停止する。停止済みでも安全に呼び出せる。 */
-	void Stop() const;
+	/// <summary>再生を停止する。</summary>
+	void Stop() noexcept;
 
 private:
-	/** MCIコマンドを送信し、失敗時はコマンドとMCIの詳細を含む例外を送出する。 */
-	void SendCommand(const std::wstring& command, wchar_t* resultBuffer = nullptr, std::uint32_t resultBufferLength = 0) const;
-
-	/** デストラクタ専用の例外を送出しないclose処理を行う。 */
-	void CloseNoThrow() noexcept;
-
+	/// <summary>デストラクタ専用の例外を送出しない解放処理を行う。</summary>
+	void ReleaseNoThrow() noexcept;
 	std::optional<std::pair<std::uint64_t, std::uint64_t>> loopRangeMilliseconds_;
-	std::wstring alias_;
-	bool isOpen_ = false;
-	bool taggedLoopRepeatStarted_ = false;
+	std::uint64_t loopStartSamples_ = 0;
+	std::uint64_t loopLengthSamples_ = 0;
+	std::uint32_t sampleRate_ = 0;
+	std::vector<std::uint8_t> pcmData_;
+	IXAudio2* xaudio2_ = nullptr;
+	IXAudio2MasteringVoice* masteringVoice_ = nullptr;
+	IXAudio2SourceVoice* sourceVoice_ = nullptr;
+	bool playbackStarted_ = false;
 };

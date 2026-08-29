@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -141,11 +141,12 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>C:\fmt\include;C:\DLSS\include;$(ProjectDir)\tp\toml++\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib;C:\DLSS\lib\Windows_x86_64\x64\nvsdk_ngx_d_dbg.lib;windowscodecs.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib;C:\DLSS\lib\Windows_x86_64\x64\nvsdk_ngx_d_dbg.lib;windowscodecs.lib;xaudio2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\DLSS\lib\Windows_x86_64\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Manifest>
@@ -166,17 +167,22 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>C:\fmt\include;C:\DLSS\include;$(ProjectDir)\tp\toml++\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib;C:\DLSS\lib\Windows_x86_64\x64\nvsdk_ngx_d.lib;windowscodecs.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>C:\VulkanSDK\1.4.357.0\Lib\vulkan-1.lib;C:\DLSS\lib\Windows_x86_64\x64\nvsdk_ngx_d.lib;windowscodecs.lib;xaudio2.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="tp\stb_vorbis.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="AudioPlayer.cpp" />
     <ClCompile Include="DebugConsole.cpp" />
     <ClCompile Include="ImageLoader.cpp" />
@@ -185,6 +191,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.hpp</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="TomlLoader.cpp" />
     <ClCompile Include="TRExLap2Enums.cpp" />
     <ClCompile Include="TRExLap2SpCommand.cpp" />
     <ClCompile Include="TRExLap2Unit.cpp" />
@@ -249,6 +256,7 @@
     <ClInclude Include="DebugConsole.hpp" />
     <ClInclude Include="ImageLoader.hpp" />
     <ClInclude Include="Main.hpp" />
+    <ClInclude Include="TomlLoader.hpp" />
     <ClInclude Include="TRExLap2Enums.hpp" />
     <ClInclude Include="TRExLap2SpCommand.hpp" />
     <ClInclude Include="TRExLap2Unit.hpp" />

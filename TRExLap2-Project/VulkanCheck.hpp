@@ -13,7 +13,9 @@
 #include <iostream>
 
 namespace TRExLap2::Vulkan {
-	/** VkResultの主要な列挙値を診断メッセージ用の文字列へ変換する。 */
+	/// <summary>
+	/// VkResultの主要な列挙値を診断メッセージ用の文字列へ変換する。
+	/// </summary>
 	inline const char* ToString(VkResult result) noexcept
 	{
 		switch (result)
@@ -42,7 +44,9 @@ namespace TRExLap2::Vulkan {
 		}
 	}
 
-	/** Vulkan API失敗の結果・式・ソース位置を整形して例外として送出する。 */
+	/// <summary>
+	/// Vulkan API失敗の結果・式・ソース位置を整形して例外として送出する。
+	/// </summary>
 	[[noreturn]] inline void ThrowIfFailed(VkResult result, std::string_view expression, std::source_location location = std::source_location::current())
 	{
 		std::ostringstream message;

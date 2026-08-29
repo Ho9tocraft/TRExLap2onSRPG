@@ -1,13 +1,19 @@
 ﻿#pragma once
+#include <array>
 #include <cstdint>
 #include <string>
+#include <map>
 #include <vector>
-#include <array>
+#include <utility>
+
+#pragma warning(push)
+#pragma warning(disable:6011 26800 26813)
+#include <toml++/toml.hpp>
+#pragma warning(pop)
 
 #include "TRExLap2Enums.hpp"
 #include "TRExLap2UnitEffect.hpp"
-#include <map>
-#include <utility>
+#include "TRExLap2SpCommand.hpp"
 
 class TRExLap2Unit
 {
@@ -157,7 +163,9 @@ protected:
 	/* ---- skills項 ---- */
 	std::vector<TRExLap2UnitSkill> unitSkills;
 	/* ---- spiritual_command項 ---- */
+	std::vector<TRExLap2SpCommand> unitSpiritualCommands;
 public:
+	TRExLap2Unit(toml::table& tblUnit);
 	~TRExLap2Unit();
 };
 
@@ -166,7 +174,8 @@ class TRExLap2IngameUnit : public TRExLap2Unit
 protected:
 	/* ---- 現在の固定値 ---- */
 	/// <summary>
-	/// ゲームデータ上でのユニットのレベル
+	/// ゲームデータ上でのユニットのレベル<para/>
+	/// 変動するが、頻繫じゃねーのでゲームデータ上でのユニットのレベルは敢えて固定値として扱う。
 	/// </summary>
 	std::int64_t level;
 	/// <summary>
@@ -291,15 +300,73 @@ protected:
 	/// バフなどによって変動した、ゲームデータ上でのユニットの現在の命中値
 	/// </summary>
 	std::int64_t currentBuffedPilotACC;
-	/* ---- 倍率保存部 ---- */
+
+	/* 
+	* △---- 現在の変動値:パラメータ ----△
+	* -------------------------------------
+	* ▽---- 倍率保存部 ----▽
+	*/
+
 	/// <summary>
 	/// ユニットが与えるダメージの倍率
 	/// </summary>
-	double dealDamageMultiplier;
+	std::map<std::u8string, double> dealDamageMultiplier;
 	/// <summary>
 	/// ユニットが受けるダメージの倍率
 	/// </summary>
-	double receiveDamageMultiplier;
+	std::map<std::u8string, double> receiveDamageMultiplier;
+	/// <summary>
+	/// ユニットの武器攻撃力の倍率
+	/// </summary>
+	std::map<std::u8string, double> weaponATKMultiplier;
+	/// <summary>
+	/// ユニットの格闘武器攻撃力の倍率
+	/// </summary>
+	std::map<std::u8string, double> weaponMeleeATKMultiplier;
+	/// <summary>
+	/// ユニットの射撃武器攻撃力の倍率
+	/// </summary>
+	std::map<std::u8string, double> weaponRangedATKMultiplier;
+	/// <summary>
+	/// ユニットの魔法武器攻撃力の倍率
+	/// </summary>
+	std::map<std::u8string, double> weaponMagicATKMultiplier;
+
+	/*
+	* △---- 倍率保存部 ----△
+	* ----------------------------
+	* ▽---- 固定増減保存部 ----▽
+	*/
+
+	/// <summary>
+	/// ユニットの移動距離の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> movementRangeFixed;
+	/// <summary>
+	/// ユニットが与えるダメージの固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> dealDamageFixed;
+	/// <summary>
+	/// ユニットが受けるダメージの固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> receiveDamageFixed;
+	/// <summary>
+	/// ユニットの武器攻撃力の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> weaponATKFixed;
+	/// <summary>
+	/// ユニットの格闘武器攻撃力の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> weaponMeleeATKFixed;
+	/// <summary>
+	/// ユニットの射撃武器攻撃力の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> weaponRangedATKFixed;
+	/// <summary>
+	/// ユニットの魔法武器攻撃力の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> weaponMagicATKFixed;
+	/* ---- 関数 ---- */
 	/// <summary>
 	/// HPを設定する。0未満は0、最大値を超える場合は最大値に設定される。
 	/// </summary>
@@ -316,6 +383,11 @@ protected:
 	/// <param name="toSP">設定するSPの値</param>
 	void setSP(std::int64_t toSP);
 public:
+	/// <summary>
+	/// 現在のレベルを返却する。
+	/// </summary>
+	/// <returns>現在のレベル</returns>
+	std::int64_t getLevel() const;
 	/// <summary>
 	/// 現在のステータスを返却する。
 	/// </summary>
@@ -365,35 +437,113 @@ public:
 	/// </summary>
 	/// <param name="amountSP">設定するSPの値</param>
 	void eventModifySP(std::int64_t amountSP);
+	/// <summary>
+	/// ユニットが与えるダメージの倍率を記入する。
+	/// </summary>
+	/// <param name="gainId">倍率を適用する要因のID</param>
+	/// <param name="multiplier">倍率の値</param>
+	void approveDealDamageMultiplier(std::u8string gainId, double multiplier);
+	/// <summary>
+	/// ユニットが受けるダメージの倍率を記入する。
+	/// </summary>
+	/// <param name="gainId">倍率を適用する要因のID</param>
+	/// <param name="multiplier">倍率の値</param>
+	void approveReceiveDamageMultiplier(std::u8string gainId, double multiplier);
+	/// <summary>
+	/// ユニットの武器攻撃力の倍率を記入する。
+	/// </summary>
+	/// <param name="gainId">倍率を適用する要因のID</param>
+	/// <param name="multiplier">倍率の値</param>
+	void approveWeaponATKMultiplier(std::u8string gainId, double multiplier);
+	/// <summary>
+	/// ユニットの格闘武器攻撃力の倍率を記入する。
+	/// </summary>
+	/// <param name="gainId">倍率を適用する要因のID</param>
+	/// <param name="multiplier">倍率の値</param>
+	void approveWeaponMeleeATKMultiplier(std::u8string gainId, double multiplier);
+	/// <summary>
+	/// ユニットの射撃武器攻撃力の倍率を記入する。
+	/// </summary>
+	/// <param name="gainId">倍率を適用する要因のID</param>
+	/// <param name="multiplier">倍率の値</param>
+	void approveWeaponRangedATKMultiplier(std::u8string gainId, double multiplier);
+	/// <summary>
+	/// ユニットの魔法武器攻撃力の倍率を記入する。
+	/// </summary>
+	/// <param name="gainId">倍率を適用する要因のID</param>
+	/// <param name="multiplier">倍率の値</param>
+	void approveWeaponMagicATKMultiplier(std::u8string gainId, double multiplier);
+	/// <summary>
+	/// ユニットの移動範囲の固定値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定値を適用する要因のID</param>
+	/// <param name="fixedValue">固定値の値</param>
+	void approveMovementRangeFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットが与えるダメージの固定値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定値を適用する要因のID</param>
+	/// <param name="fixedValue">固定値の値</param>
+	void approveDealDamageFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットが受けるダメージの固定値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定値を適用する要因のID</param>
+	/// <param name="fixedValue">固定値の値</param>
+	void approveReceiveDamageFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの武器攻撃力の固定値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定値を適用する要因のID</param>
+	/// <param name="fixedValue">固定値の値</param>
+	void approveWeaponATKFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの格闘武器攻撃力の固定値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定値を適用する要因のID</param>
+	/// <param name="fixedValue">固定値の値</param>
+	void approveWeaponMeleeATKFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの射撃武器攻撃力の固定値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定値を適用する要因のID</param>
+	/// <param name="fixedValue">固定値の値</param>
+	void approveWeaponRangedATKFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの魔法武器攻撃力の固定値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定値を適用する要因のID</param>
+	/// <param name="fixedValue">固定値の値</param>
+	void approveWeaponMagicATKFixed(std::u8string gainId, std::int64_t fixedValue);
 };
 
 /// <summary>
 /// TODO: ジョブ一覧? 変数にはできない
-/// - ナイト (Paladin)
-/// - 戦士 (Warrior)
-/// - 暗黒騎士 (Dark Knight)
-/// - ガンブレイカー (Gunbreaker)
-/// - バスティオン (Bastion)
-/// - 白魔道士 (White Mage)
-/// - 学者 (Scholar)
-/// - 占星術師 (Astrologian)
-/// - 賢者 (Sage)
-/// - 竜騎士 (Dragoon)
-/// - リーパー (Reaper)
-/// - オブスリヴァクォリヤ (Obsleviquarrya)
-/// - モンク (Monk)
-/// - 巫覡 (Exorcist)
-/// - 侍 (Samurai)
-/// - 忍者 (Ninja)
-/// - 魔拳士 (Lostmagia)
-/// - ヴァイパー (Viper)
-/// - 吟遊詩人 (Bard)
-/// - 機工士 (Machinist)
-/// - 踊り子 (Dancer)
-/// - ??? (8.x new physical ranged job)
-/// - ダイアロスアイドル (Diaros Idol)
-/// - 黒魔道士 (Black Mage)
-/// - 召喚士 (Summoner)
-/// - 赤魔道士 (Red Mage)
-/// - ピクトマンサー (Pictomancer)
+/// - ナイト (Paladin)                      [FF14]     [2.x]
+/// - 戦士 (Warrior)                        [FF14]     [2.x]
+/// - 暗黒騎士 (Dark Knight)                [FF14]     [3.x]
+/// - ガンブレイカー (Gunbreaker)           [FF14]     [5.x]
+/// - バスティオン (Bastion)                [FF14]     [8.x]
+/// - 白魔道士 (White Mage)                 [FF14]     [2.x]
+/// - 学者 (Scholar)                        [FF14]     [2.x]
+/// - 占星術師 (Astrologian)                [FF14]     [3.x]
+/// - 賢者 (Sage)                           [FF14]     [6.x]
+/// - 竜騎士 (Dragoon)                      [FF14]     [2.x]
+/// - リーパー (Reaper)                     [FF14]     [6.x]
+/// - オブスリヴァクォリヤ (Obsleviquarrya) [TRExLap2] [6.x]
+/// - モンク (Monk)                         [FF14]     [2.x]
+/// - 巫覡 (Exorcist)                       [TRExLap2] [2.x]
+/// - 侍 (Samurai)                          [FF14]     [4.x]
+/// - 忍者 (Ninja)                          [FF14]     [2.x]
+/// - 魔拳士 (Lostmagia)                    [TRExLap2] [4.x]
+/// - ヴァイパー (Viper)                    [FF14]     [7.x]
+/// - 吟遊詩人 (Bard)                       [FF14]     [2.x]
+/// - 機工士 (Machinist)                    [FF14]     [3.x]
+/// - 踊り子 (Dancer)                       [FF14]     [5.x]
+/// - ???                                   [FF14]     [8.x]
+/// - ダイアロスアイドル (Diaros Idol)      [TRExLap2] [5.x]
+/// - 黒魔道士 (Black Mage)                 [FF14]     [2.x]
+/// - 召喚士 (Summoner)                     [FF14]     [2.x]
+/// - 赤魔道士 (Red Mage)                   [FF14]     [4.x]
+/// - ピクトマンサー (Pictomancer)          [FF14]     [7.x]
 /// </summary>

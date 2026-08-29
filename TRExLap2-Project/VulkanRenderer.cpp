@@ -14,7 +14,9 @@ constexpr bool kDebugToolsEnabled = TREXLAP2_DEBUG_TOOLS != 0;
 constexpr char kDlssProjectId[] = "c3dfa68e-460d-4c4a-bc9c-95fc87545f7a";
 constexpr char kDlssEngineVersion[] = "TRExLap2-0.1";
 
-/** 実行ファイルの配置ディレクトリを取得し、実行時資産とログの基準にする。 */
+/// <summary>
+/// 実行ファイルの配置ディレクトリを取得し、実行時資産とログの基準にする。
+/// </summary>
 std::filesystem::path GetExecutableDirectory()
 {
 	std::vector<wchar_t> pathBuffer(MAX_PATH);
@@ -27,13 +29,17 @@ std::filesystem::path GetExecutableDirectory()
 	}
 }
 
-/** VulkanとDLSSの実行診断を単体exe横に固定して記録するパスを返す。 */
+/// <summary>
+/// VulkanとDLSSの実行診断を単体exe横に固定して記録するパスを返す。
+/// </summary>
 std::filesystem::path GetValidationLogPath()
 {
 	return GetExecutableDirectory() / L"VulkanValidation.log";
 }
 
-/** DLSS Super Samplingの必要拡張問い合わせに使うNGX Feature Discovery情報を組み立てる。 */
+/// <summary>
+/// DLSS Super Samplingの必要拡張問い合わせに使うNGX Feature Discovery情報を組み立てる。
+/// </summary>
 NVSDK_NGX_FeatureDiscoveryInfo MakeDlssFeatureDiscoveryInfo()
 {
 	static const std::wstring applicationDataPath = GetExecutableDirectory().wstring();
@@ -46,13 +52,17 @@ NVSDK_NGX_FeatureDiscoveryInfo MakeDlssFeatureDiscoveryInfo()
 	return info;
 }
 
-/** Debug実行開始時に前回のVulkan Validationログを空にする。 */
+/// <summary>
+/// Debug実行開始時に前回のVulkan Validationログを空にする。
+/// </summary>
 void ResetValidationLog()
 {
 	if constexpr (kDebugToolsEnabled) std::ofstream(GetValidationLogPath(), std::ios::trunc);
 }
 
-/** Vulkan Validationの警告またはエラーを検証用ログへ追記する。 */
+/// <summary>
+/// Vulkan Validationの警告またはエラーを検証用ログへ追記する。
+/// </summary>
 void AppendValidationLog(const char* message)
 {
 	if constexpr (kDebugToolsEnabled)
@@ -62,7 +72,9 @@ void AppendValidationLog(const char* message)
 	}
 }
 
-/** Surfaceが対応する合成アルファ方式から、優先順位順に一つ選択する。 */
+/// <summary>
+/// Surfaceが対応する合成アルファ方式から、優先順位順に一つ選択する。
+/// </summary>
 VkCompositeAlphaFlagBitsKHR ChooseCompositeAlpha(const VkSurfaceCapabilitiesKHR& capabilities)
 {
 	constexpr std::array<VkCompositeAlphaFlagBitsKHR, 4> choices{
@@ -73,7 +85,9 @@ VkCompositeAlphaFlagBitsKHR ChooseCompositeAlpha(const VkSurfaceCapabilitiesKHR&
 	throw std::runtime_error("No supported swapchain composite alpha mode.");
 }
 
-/** 実行ファイルと同じディレクトリにあるSPIR-Vバイナリをuint32_t列として読み込む。 */
+/// <summary>
+/// 実行ファイルと同じディレクトリにあるSPIR-Vバイナリをuint32_t列として読み込む。
+/// </summary>
 std::vector<std::uint32_t> ReadShaderFile(const wchar_t* fileName)
 {
 	const std::filesystem::path shaderPath = GetExecutableDirectory() / fileName;
@@ -90,7 +104,9 @@ std::vector<std::uint32_t> ReadShaderFile(const wchar_t* fileName)
 }
 }
 
-/** Vulkan Instanceからテクスチャと描画同期まで、最初のフレームに必要な資源を生成する。 */
+/// <summary>
+/// Vulkan Instanceからテクスチャと描画同期まで、最初のフレームに必要な資源を生成する。
+/// </summary>
 VulkanRenderer::VulkanRenderer(HWND hwnd, std::uint32_t width, std::uint32_t height, const ImageRgba8& texture)
 	: windowHandle_(hwnd), windowWidth_(width), windowHeight_(height)
 {
@@ -102,7 +118,9 @@ VulkanRenderer::VulkanRenderer(HWND hwnd, std::uint32_t width, std::uint32_t hei
 	CreateGraphicsPipeline(); AllocateCommandBuffers(); CreateSyncObjects();
 }
 
-/** GPU完了後、生成順の逆順でVulkan資源を安全に破棄する。 */
+/// <summary>
+/// GPU完了後、生成順の逆順でVulkan資源を安全に破棄する。
+/// </summary>
 VulkanRenderer::~VulkanRenderer()
 {
 	WaitUntilIdle(); DestroySyncObjects(); DestroySwapchainResources();
@@ -119,13 +137,17 @@ VulkanRenderer::~VulkanRenderer()
 	if (instance_ != VK_NULL_HANDLE) vkDestroyInstance(instance_, nullptr);
 }
 
-/** 描画キューとPresentキューの両方が見つかっているか判定する。 */
+/// <summary>
+/// 描画キューとPresentキューの両方が見つかっているか判定する。
+/// </summary>
 bool VulkanRenderer::QueueFamilyIndices::IsComplete() const noexcept
 {
 	return graphicsFamily.has_value() && presentFamily.has_value();
 }
 
-/** Vulkan 1.3と、Win32表示・Debug診断に必要なInstance拡張を有効化する。 */
+/// <summary>
+/// Vulkan 1.3と、Win32表示・Debug診断に必要なInstance拡張を有効化する。
+/// </summary>
 void VulkanRenderer::CreateInstance()
 {
 	QueryDlssInstanceExtensions();
@@ -154,7 +176,9 @@ void VulkanRenderer::CreateInstance()
 	VK_CHECK(vkCreateInstance(&info, nullptr, &instance_));
 }
 
-/** DLSSが要求するVulkan Instance拡張をSDKから取得し、後続のInstance生成へ加える。 */
+/// <summary>
+/// DLSSが要求するVulkan Instance拡張をSDKから取得し、後続のInstance生成へ加える。
+/// </summary>
 void VulkanRenderer::QueryDlssInstanceExtensions()
 {
 	const NVSDK_NGX_FeatureDiscoveryInfo discovery = MakeDlssFeatureDiscoveryInfo();
@@ -167,7 +191,9 @@ void VulkanRenderer::QueryDlssInstanceExtensions()
 	dlssExtensionRequirementsAvailable_ = true;
 }
 
-/** Debug構成でのみ、Validation Layerのメッセージ受信先を生成する。 */
+/// <summary>
+/// Debug構成でのみ、Validation Layerのメッセージ受信先を生成する。
+/// </summary>
 void VulkanRenderer::SetupDebugMessenger()
 {
 	if constexpr (kDebugToolsEnabled)
@@ -177,7 +203,9 @@ void VulkanRenderer::SetupDebugMessenger()
 	}
 }
 
-/** 指定したWin32ウィンドウをVulkanの表示Surfaceへ変換する。 */
+/// <summary>
+/// 指定したWin32ウィンドウをVulkanの表示Surfaceへ変換する。
+/// </summary>
 void VulkanRenderer::CreateSurface(HWND hwnd)
 {
 	VkWin32SurfaceCreateInfoKHR info{ VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
@@ -186,7 +214,9 @@ void VulkanRenderer::CreateSurface(HWND hwnd)
 	VK_CHECK(vkCreateWin32SurfaceKHR(instance_, &info, nullptr, &surface_));
 }
 
-/** 描画・表示・Swapchain・Vulkan 1.3機能を満たす最初のGPUを採用する。 */
+/// <summary>
+/// 描画・表示・Swapchain・Vulkan 1.3機能を満たす最初のGPUを採用する。
+/// </summary>
 void VulkanRenderer::PickPhysicalDevice()
 {
 	std::uint32_t count = 0;
@@ -201,7 +231,9 @@ void VulkanRenderer::PickPhysicalDevice()
 	throw std::runtime_error("No GPU supports Vulkan 1.3 dynamic rendering and presentation.");
 }
 
-/** 選定済みGPUに対してDLSSが要求するVulkan Device拡張をSDKから取得する。 */
+/// <summary>
+/// 選定済みGPUに対してDLSSが要求するVulkan Device拡張をSDKから取得する。
+/// </summary>
 void VulkanRenderer::QueryDlssDeviceExtensions()
 {
 	if (!dlssExtensionRequirementsAvailable_) return;
@@ -219,7 +251,9 @@ void VulkanRenderer::QueryDlssDeviceExtensions()
 	for (std::uint32_t index = 0; index < extensionCount; ++index) dlssDeviceExtensions_.emplace_back(extensionProperties[index].extensionName);
 }
 
-/** 描画・表示・Dynamic Rendering・Swapchainを満たす物理GPUか検証する。 */
+/// <summary>
+/// 描画・表示・Dynamic Rendering・Swapchainを満たす物理GPUか検証する。
+/// </summary>
 bool VulkanRenderer::IsDeviceSuitable(VkPhysicalDevice device) const
 {
 	if (!FindQueueFamilies(device).IsComplete() || !CheckDeviceExtensionSupport(device)) return false;
@@ -232,7 +266,9 @@ bool VulkanRenderer::IsDeviceSuitable(VkPhysicalDevice device) const
 	return features13.dynamicRendering == VK_TRUE && features13.synchronization2 == VK_TRUE;
 }
 
-/** 必須のDevice拡張が物理GPUで利用可能か検証する。 */
+/// <summary>
+/// 必須のDevice拡張が物理GPUで利用可能か検証する。
+/// </summary>
 bool VulkanRenderer::CheckDeviceExtensionSupport(VkPhysicalDevice device) const
 {
 	std::uint32_t count = 0;
@@ -244,7 +280,9 @@ bool VulkanRenderer::CheckDeviceExtensionSupport(VkPhysicalDevice device) const
 	return required.empty();
 }
 
-/** 描画可能かつSurface提示可能なキューファミリの番号を探索する。 */
+/// <summary>
+/// 描画可能かつSurface提示可能なキューファミリの番号を探索する。
+/// </summary>
 VulkanRenderer::QueueFamilyIndices VulkanRenderer::FindQueueFamilies(VkPhysicalDevice device) const
 {
 	QueueFamilyIndices result{};
@@ -263,7 +301,9 @@ VulkanRenderer::QueueFamilyIndices VulkanRenderer::FindQueueFamilies(VkPhysicalD
 	return result;
 }
 
-/** 物理GPUとSurfaceの組み合わせで利用可能なSwapchain条件を問い合わせる。 */
+/// <summary>
+/// 物理GPUとSurfaceの組み合わせで利用可能なSwapchain条件を問い合わせる。
+/// </summary>
 VulkanRenderer::SwapchainSupportDetails VulkanRenderer::QuerySwapchainSupport(VkPhysicalDevice device) const
 {
 	SwapchainSupportDetails result{};
@@ -279,7 +319,9 @@ VulkanRenderer::SwapchainSupportDetails VulkanRenderer::QuerySwapchainSupport(Vk
 	return result;
 }
 
-/** Dynamic Rendering、Synchronization 2、およびNGXが要求するBuffer Device Addressを有効化する。 */
+/// <summary>
+/// Dynamic Rendering、Synchronization 2、およびNGXが要求するBuffer Device Addressを有効化する。
+/// </summary>
 void VulkanRenderer::CreateLogicalDevice()
 {
 	const auto families = FindQueueFamilies(physicalDevice_);
@@ -312,7 +354,9 @@ void VulkanRenderer::CreateLogicalDevice()
 	vkGetDeviceQueue(device_, presentQueueFamily_, 0, &presentQueue_);
 }
 
-/** Swapchain画像はAcquire後からPresent前だけ、アプリ側が描画に使用できる。 */
+/// <summary>
+/// Swapchain画像はAcquire後からPresent前だけ、アプリ側が描画に使用できる。
+/// </summary>
 void VulkanRenderer::CreateSwapchain()
 {
 	const auto support = QuerySwapchainSupport(physicalDevice_);
@@ -345,7 +389,9 @@ void VulkanRenderer::CreateSwapchain()
 	swapchainImageFormat_ = format.format; swapchainExtent_ = extent;
 }
 
-/** 各Swapchain画像をDynamic RenderingのColor Attachmentとして参照できるImageViewにする。 */
+/// <summary>
+/// 各Swapchain画像をDynamic RenderingのColor Attachmentとして参照できるImageViewにする。
+/// </summary>
 void VulkanRenderer::CreateSwapchainImageViews()
 {
 	swapchainImageViews_.resize(swapchainImages_.size());
@@ -359,7 +405,9 @@ void VulkanRenderer::CreateSwapchainImageViews()
 	}
 }
 
-/** 指定条件をすべて満たす物理デバイスメモリ種別を探索する。 */
+/// <summary>
+/// 指定条件をすべて満たす物理デバイスメモリ種別を探索する。
+/// </summary>
 std::uint32_t VulkanRenderer::FindMemoryType(std::uint32_t typeFilter, VkMemoryPropertyFlags properties) const
 {
 	VkPhysicalDeviceMemoryProperties memoryProperties{};
@@ -373,7 +421,9 @@ std::uint32_t VulkanRenderer::FindMemoryType(std::uint32_t typeFilter, VkMemoryP
 	throw std::runtime_error("No compatible Vulkan memory type was found.");
 }
 
-/** Bufferを生成し、要求された特性のDevice Memoryを割り当てて結合する。 */
+/// <summary>
+/// Bufferを生成し、要求された特性のDevice Memoryを割り当てて結合する。
+/// </summary>
 void VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory) const
 {
 	VkBufferCreateInfo bufferInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
@@ -388,7 +438,9 @@ void VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, V
 	VK_CHECK(vkBindBufferMemory(device_, buffer, memory, 0));
 }
 
-/** 画像転送専用の一回限りPrimary Command Bufferを確保して記録開始する。 */
+/// <summary>
+/// 画像転送専用の一回限りPrimary Command Bufferを確保して記録開始する。
+/// </summary>
 VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands() const
 {
 	VkCommandBufferAllocateInfo allocateInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
@@ -401,7 +453,9 @@ VkCommandBuffer VulkanRenderer::BeginSingleTimeCommands() const
 	return commandBuffer;
 }
 
-/** 一回限りCommand Bufferを送信し、完了を待って解放する。 */
+/// <summary>
+/// 一回限りCommand Bufferを送信し、完了を待って解放する。
+/// </summary>
 void VulkanRenderer::EndSingleTimeCommands(VkCommandBuffer commandBuffer) const
 {
 	VK_CHECK(vkEndCommandBuffer(commandBuffer));
@@ -414,7 +468,9 @@ void VulkanRenderer::EndSingleTimeCommands(VkCommandBuffer commandBuffer) const
 	vkFreeCommandBuffers(device_, commandPool_, 1, &commandBuffer);
 }
 
-/** テクスチャ画像を転送先またはFragment Shader読取用レイアウトへ遷移する。 */
+/// <summary>
+/// テクスチャ画像を転送先またはFragment Shader読取用レイアウトへ遷移する。
+/// </summary>
 void VulkanRenderer::TransitionTextureLayout(VkImageLayout oldLayout, VkImageLayout newLayout) const
 {
 	VkImageMemoryBarrier2 barrier{ VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
@@ -442,7 +498,9 @@ void VulkanRenderer::TransitionTextureLayout(VkImageLayout oldLayout, VkImageLay
 	EndSingleTimeCommands(commandBuffer);
 }
 
-/** Staging Buffer内のRGBA8をテクスチャ画像のMip 0へコピーする。 */
+/// <summary>
+/// Staging Buffer内のRGBA8をテクスチャ画像のMip 0へコピーする。
+/// </summary>
 void VulkanRenderer::CopyBufferToTexture(VkBuffer buffer, std::uint32_t width, std::uint32_t height) const
 {
 	VkBufferImageCopy region{};
@@ -454,7 +512,9 @@ void VulkanRenderer::CopyBufferToTexture(VkBuffer buffer, std::uint32_t width, s
 	EndSingleTimeCommands(commandBuffer);
 }
 
-/** WICのRGBA8をStaging Buffer経由でDevice Local画像へ転送し、ViewとSamplerを生成する。 */
+/// <summary>
+/// WICのRGBA8をStaging Buffer経由でDevice Local画像へ転送し、ViewとSamplerを生成する。
+/// </summary>
 void VulkanRenderer::CreateTexture(const ImageRgba8& texture)
 {
 	if (texture.width == 0 || texture.height == 0 || texture.pixels.empty()) throw std::runtime_error("Texture data is empty.");
@@ -503,7 +563,9 @@ void VulkanRenderer::CreateTexture(const ImageRgba8& texture)
 	VK_CHECK(vkCreateSampler(device_, &samplerInfo, nullptr, &textureSampler_));
 }
 
-/** テクスチャのSampler、View、Image、Device Memoryを依存順に破棄する。 */
+/// <summary>
+/// テクスチャのSampler、View、Image、Device Memoryを依存順に破棄する。
+/// </summary>
 void VulkanRenderer::DestroyTexture()
 {
 	if (device_ == VK_NULL_HANDLE) return;
@@ -516,7 +578,9 @@ void VulkanRenderer::DestroyTexture()
 	textureWidth_ = 0; textureHeight_ = 0;
 }
 
-/** Swapchain解像度のPost Process画像を生成し、Device LocalメモリとViewを結合する。 */
+/// <summary>
+/// Swapchain解像度のPost Process画像を生成し、Device LocalメモリとViewを結合する。
+/// </summary>
 void VulkanRenderer::CreatePostProcessImage(VkFormat format, VkImageUsageFlags usage, VkImageAspectFlags aspectMask, PostProcessImage& image)
 {
 	VkImageCreateInfo imageInfo{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
@@ -540,7 +604,9 @@ void VulkanRenderer::CreatePostProcessImage(VkFormat format, VkImageUsageFlags u
 	image.format = format; image.layout = VK_IMAGE_LAYOUT_UNDEFINED; image.aspectMask = aspectMask;
 }
 
-/** Post Process画像のView、Image、Device Memoryを依存順に破棄する。 */
+/// <summary>
+/// Post Process画像のView、Image、Device Memoryを依存順に破棄する。
+/// </summary>
 void VulkanRenderer::DestroyPostProcessImage(PostProcessImage& image)
 {
 	if (device_ == VK_NULL_HANDLE) return;
@@ -550,7 +616,9 @@ void VulkanRenderer::DestroyPostProcessImage(PostProcessImage& image)
 	image = {};
 }
 
-/** scene、TAA履歴、およびDLSSで必要な入力画像を現在のSwapchain解像度で生成する。 */
+/// <summary>
+/// scene、TAA履歴、およびDLSSで必要な入力画像を現在のSwapchain解像度で生成する。
+/// </summary>
 void VulkanRenderer::CreateAntiAliasingResources()
 {
 	const VkImageUsageFlags colorUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
@@ -565,7 +633,9 @@ void VulkanRenderer::CreateAntiAliasingResources()
 	}
 }
 
-/** DLSS Featureを先に解放し、Swapchain依存の内部画像をすべて破棄する。 */
+/// <summary>
+/// DLSS Featureを先に解放し、Swapchain依存の内部画像をすべて破棄する。
+/// </summary>
 void VulkanRenderer::DestroyAntiAliasingResources()
 {
 	ReleaseDlssFeature();
@@ -575,7 +645,9 @@ void VulkanRenderer::DestroyAntiAliasingResources()
 	taaHistoryValid_ = false;
 }
 
-/** 画像レイアウトを用途に合わせて遷移し、全コマンド間の読書き依存を明示する。 */
+/// <summary>
+/// 画像レイアウトを用途に合わせて遷移し、全コマンド間の読書き依存を明示する。
+/// </summary>
 void VulkanRenderer::TransitionImage(VkCommandBuffer commandBuffer, PostProcessImage& image, VkImageLayout newLayout) const
 {
 	if (image.layout == newLayout) return;
@@ -592,7 +664,9 @@ void VulkanRenderer::TransitionImage(VkCommandBuffer commandBuffer, PostProcessI
 	image.layout = newLayout;
 }
 
-/** Fragment Shaderの単一テクスチャと、TAAの二入力を公開するDescriptor Set Layoutを生成する。 */
+/// <summary>
+/// Fragment Shaderの単一テクスチャと、TAAの二入力を公開するDescriptor Set Layoutを生成する。
+/// </summary>
 void VulkanRenderer::CreateDescriptorSetLayout()
 {
 	VkDescriptorSetLayoutBinding binding{};
@@ -607,7 +681,9 @@ void VulkanRenderer::CreateDescriptorSetLayout()
 	VK_CHECK(vkCreateDescriptorSetLayout(device_, &taaInfo, nullptr, &taaDescriptorSetLayout_));
 }
 
-/** 元画像とTAA履歴を読む単一Sampler Descriptor Setを生成する。 */
+/// <summary>
+/// 元画像とTAA履歴を読む単一Sampler Descriptor Setを生成する。
+/// </summary>
 void VulkanRenderer::CreateDescriptorPoolAndSet()
 {
 	VkDescriptorPoolSize poolSize{};
@@ -636,7 +712,9 @@ void VulkanRenderer::CreateDescriptorPoolAndSet()
 	vkUpdateDescriptorSets(device_, static_cast<std::uint32_t>(writes.size()), writes.data(), 0, nullptr);
 }
 
-/** sceneと各TAA履歴を二入力として結び付けるDescriptor PoolとSetを生成する。 */
+/// <summary>
+/// sceneと各TAA履歴を二入力として結び付けるDescriptor PoolとSetを生成する。
+/// </summary>
 void VulkanRenderer::CreateTaaDescriptorResources()
 {
 	VkDescriptorPoolSize poolSize{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4 };
@@ -663,7 +741,9 @@ void VulkanRenderer::CreateTaaDescriptorResources()
 	}
 }
 
-/** Swapchain解像度に依存するすべてのDescriptor PoolとSetを破棄する。 */
+/// <summary>
+/// Swapchain解像度に依存するすべてのDescriptor PoolとSetを破棄する。
+/// </summary>
 void VulkanRenderer::DestroyDescriptorResources()
 {
 	if (device_ == VK_NULL_HANDLE) return;
@@ -673,7 +753,9 @@ void VulkanRenderer::DestroyDescriptorResources()
 	taaDescriptorSets_ = {}; historyDescriptorSets_ = {}; textureDescriptorSet_ = VK_NULL_HANDLE;
 }
 
-/** scene、TAA、presentで共有するDynamic Rendering用Graphics Pipelineを生成する。 */
+/// <summary>
+/// scene、TAA、presentで共有するDynamic Rendering用Graphics Pipelineを生成する。
+/// </summary>
 void VulkanRenderer::CreateGraphicsPipelineForTarget(VkShaderModule vertexShader, VkShaderModule fragmentShader, VkPipelineLayout pipelineLayout, VkFormat targetFormat, bool alphaBlend, VkPipeline& pipeline) const
 {
 	VkPipelineShaderStageCreateInfo vertexStage{ VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
@@ -716,7 +798,9 @@ void VulkanRenderer::CreateGraphicsPipelineForTarget(VkShaderModule vertexShader
 	VK_CHECK(vkCreateGraphicsPipelines(device_, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline));
 }
 
-/** scene描画・TAA履歴合成・Swapchain提示の三種類のGraphics Pipelineを生成する。 */
+/// <summary>
+/// scene描画・TAA履歴合成・Swapchain提示の三種類のGraphics Pipelineを生成する。
+/// </summary>
 void VulkanRenderer::CreateGraphicsPipeline()
 {
 	const VkShaderModule vertexShader = CreateShaderModule(ReadShaderFile(L"TRExLap2Shader.vert.spv"));
@@ -747,7 +831,9 @@ void VulkanRenderer::CreateGraphicsPipeline()
 	vkDestroyShaderModule(device_, vertexShader, nullptr);
 }
 
-/** 読み込んだSPIR-Vコードから一時的なVulkan Shader Moduleを生成する。 */
+/// <summary>
+/// 読み込んだSPIR-Vコードから一時的なVulkan Shader Moduleを生成する。
+/// </summary>
 VkShaderModule VulkanRenderer::CreateShaderModule(const std::vector<std::uint32_t>& code) const
 {
 	VkShaderModuleCreateInfo info{ VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
@@ -757,7 +843,9 @@ VkShaderModule VulkanRenderer::CreateShaderModule(const std::vector<std::uint32_
 	return shader;
 }
 
-/** NVNGXをプロジェクト識別子付きで初期化し、DLSS Super Samplingの可用性を問い合わせる。 */
+/// <summary>
+/// NVNGXをプロジェクト識別子付きで初期化し、DLSS Super Samplingの可用性を問い合わせる。
+/// </summary>
 void VulkanRenderer::InitializeDlss()
 {
 	if (!dlssExtensionRequirementsAvailable_)
@@ -796,7 +884,9 @@ void VulkanRenderer::InitializeDlss()
 	}
 }
 
-/** 現在のSwapchain解像度を入出力同一にして、DLAA Featureを生成する。 */
+/// <summary>
+/// 現在のSwapchain解像度を入出力同一にして、DLAA Featureを生成する。
+/// </summary>
 void VulkanRenderer::CreateDlssFeature()
 {
 	if (!dlssInitialized_ || dlssParameters_ == nullptr || !swapchainSupportsStorage_) return;
@@ -821,14 +911,18 @@ void VulkanRenderer::CreateDlssFeature()
 	AppendValidationLog("[DLSS] DLAA feature enabled.");
 }
 
-/** 解像度変更または終了前に、生成済みのDLSS Featureを解放する。 */
+/// <summary>
+/// 解像度変更または終了前に、生成済みのDLSS Featureを解放する。
+/// </summary>
 void VulkanRenderer::ReleaseDlssFeature()
 {
 	if (dlssFeature_ != nullptr) NVSDK_NGX_VULKAN_ReleaseFeature(dlssFeature_);
 	dlssFeature_ = nullptr; dlssEnabled_ = false;
 }
 
-/** NGX Parameterを破棄し、Vulkan Deviceより先にNGXを停止する。 */
+/// <summary>
+/// NGX Parameterを破棄し、Vulkan Deviceより先にNGXを停止する。
+/// </summary>
 void VulkanRenderer::ShutdownDlss()
 {
 	ReleaseDlssFeature();
@@ -838,7 +932,9 @@ void VulkanRenderer::ShutdownDlss()
 	dlssInitialized_ = false;
 }
 
-/** scene・深度・MVをDLAAへ渡し、取得済みSwapchain画像へ結果を書き込む。 */
+/// <summary>
+/// scene・深度・MVをDLAAへ渡し、取得済みSwapchain画像へ結果を書き込む。
+/// </summary>
 bool VulkanRenderer::EvaluateDlss(VkCommandBuffer commandBuffer, std::uint32_t imageIndex)
 {
 	if (!dlssEnabled_ || dlssFeature_ == nullptr || dlssParameters_ == nullptr) return false;
@@ -862,7 +958,9 @@ bool VulkanRenderer::EvaluateDlss(VkCommandBuffer commandBuffer, std::uint32_t i
 	return false;
 }
 
-/** Graphics Queue用コマンドバッファを個別リセット可能なCommand Poolを生成する。 */
+/// <summary>
+/// Graphics Queue用コマンドバッファを個別リセット可能なCommand Poolを生成する。
+/// </summary>
 void VulkanRenderer::CreateCommandPool()
 {
 	VkCommandPoolCreateInfo info{ VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
@@ -870,7 +968,9 @@ void VulkanRenderer::CreateCommandPool()
 	VK_CHECK(vkCreateCommandPool(device_, &info, nullptr, &commandPool_));
 }
 
-/** フレーム並列数と同数のPrimary Command Bufferを確保する。 */
+/// <summary>
+/// フレーム並列数と同数のPrimary Command Bufferを確保する。
+/// </summary>
 void VulkanRenderer::AllocateCommandBuffers()
 {
 	commandBuffers_.resize(kMaxFramesInFlight);
@@ -879,7 +979,9 @@ void VulkanRenderer::AllocateCommandBuffers()
 	VK_CHECK(vkAllocateCommandBuffers(device_, &info, commandBuffers_.data()));
 }
 
-/** Acquire・描画完了・CPU待機を同期するSemaphoreとFenceをフレームごとに生成する。 */
+/// <summary>
+/// Acquire・描画完了・CPU待機を同期するSemaphoreとFenceをフレームごとに生成する。
+/// </summary>
 void VulkanRenderer::CreateSyncObjects()
 {
 	VkSemaphoreCreateInfo semaphoreInfo{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
@@ -893,7 +995,9 @@ void VulkanRenderer::CreateSyncObjects()
 	CreateRenderFinishedSemaphores();
 }
 
-/** Present待機の寿命をSwapchain画像へ結び付ける描画完了Semaphoreを生成する。 */
+/// <summary>
+/// Present待機の寿命をSwapchain画像へ結び付ける描画完了Semaphoreを生成する。
+/// </summary>
 void VulkanRenderer::CreateRenderFinishedSemaphores()
 {
 	VkSemaphoreCreateInfo info{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
@@ -901,7 +1005,9 @@ void VulkanRenderer::CreateRenderFinishedSemaphores()
 	for (auto& semaphore : renderFinishedSemaphores_) VK_CHECK(vkCreateSemaphore(device_, &info, nullptr, &semaphore));
 }
 
-/** Swapchain再生成または終了時に画像単位の描画完了Semaphoreを破棄する。 */
+/// <summary>
+/// Swapchain再生成または終了時に画像単位の描画完了Semaphoreを破棄する。
+/// </summary>
 void VulkanRenderer::DestroyRenderFinishedSemaphores()
 {
 	if (device_ == VK_NULL_HANDLE) return;
@@ -910,7 +1016,9 @@ void VulkanRenderer::DestroyRenderFinishedSemaphores()
 	renderFinishedSemaphores_.clear();
 }
 
-/** 同じフレーム用同期オブジェクトをGPU完了前に再利用しないためFenceを待機する。 */
+/// <summary>
+/// 同じフレーム用同期オブジェクトをGPU完了前に再利用しないためFenceを待機する。
+/// </summary>
 void VulkanRenderer::DrawFrame()
 {
 	FrameSync& frame = frameSyncs_[currentFrame_];
@@ -947,7 +1055,9 @@ void VulkanRenderer::DrawFrame()
 	currentFrame_ = (currentFrame_ + 1) % kMaxFramesInFlight;
 }
 
-/** scene描画後にDLAAまたはTAAを適用し、最終結果をSwapchainへ提示するコマンドを記録する。 */
+/// <summary>
+/// scene描画後にDLAAまたはTAAを適用し、最終結果をSwapchainへ提示するコマンドを記録する。
+/// </summary>
 void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, std::uint32_t imageIndex)
 {
 	VkCommandBufferBeginInfo begin{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -1047,7 +1157,9 @@ void VulkanRenderer::RecordCommandBuffer(VkCommandBuffer commandBuffer, std::uin
 	VK_CHECK(vkEndCommandBuffer(commandBuffer));
 }
 
-/** 最小化時の0x0サイズではSwapchainを作れないため、復元時のWM_SIZEまで待機する。 */
+/// <summary>
+/// 最小化時の0x0サイズではSwapchainを作れないため、復元時のWM_SIZEまで待機する。
+/// </summary>
 void VulkanRenderer::RecreateSwapchain(std::uint32_t width, std::uint32_t height)
 {
 	if (width == 0 || height == 0) return;
@@ -1057,13 +1169,17 @@ void VulkanRenderer::RecreateSwapchain(std::uint32_t width, std::uint32_t height
 	CreateGraphicsPipeline(); CreateRenderFinishedSemaphores();
 }
 
-/** 全GPU処理の完了を待機し、資源破棄またはSwapchain再生成を可能にする。 */
+/// <summary>
+/// 全GPU処理の完了を待機し、資源破棄またはSwapchain再生成を可能にする。
+/// </summary>
 void VulkanRenderer::WaitUntilIdle() const
 {
 	if (device_ != VK_NULL_HANDLE) VK_CHECK(vkDeviceWaitIdle(device_));
 }
 
-/** Swapchain本体より先に、その画像を参照するImageViewを破棄する。 */
+/// <summary>
+/// Swapchain本体より先に、その画像を参照するImageViewを破棄する。
+/// </summary>
 void VulkanRenderer::DestroySwapchainResources()
 {
 	if (presentPipeline_ != VK_NULL_HANDLE) vkDestroyPipeline(device_, presentPipeline_, nullptr);
@@ -1077,7 +1193,9 @@ void VulkanRenderer::DestroySwapchainResources()
 	swapchain_ = VK_NULL_HANDLE; swapchainSupportsStorage_ = false;
 }
 
-/** フレームごとのSemaphoreとFenceを破棄し、ハンドルを初期化する。 */
+/// <summary>
+/// フレームごとのSemaphoreとFenceを破棄し、ハンドルを初期化する。
+/// </summary>
 void VulkanRenderer::DestroySyncObjects()
 {
 	if (device_ == VK_NULL_HANDLE) return;
@@ -1090,7 +1208,9 @@ void VulkanRenderer::DestroySyncObjects()
 	}
 }
 
-/** Overlayや将来のDLSSがStorage用途を追加できるBGRA8 UNORMを優先する。 */
+/// <summary>
+/// Overlayや将来のDLSSがStorage用途を追加できるBGRA8 UNORMを優先する。
+/// </summary>
 VkSurfaceFormatKHR VulkanRenderer::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats) const
 {
 	for (const auto& format : formats)
@@ -1098,14 +1218,18 @@ VkSurfaceFormatKHR VulkanRenderer::ChooseSwapSurfaceFormat(const std::vector<VkS
 	return formats.front();
 }
 
-/** 低遅延のMAILBOXを優先し、必須のFIFOへフォールバックする。 */
+/// <summary>
+/// 低遅延のMAILBOXを優先し、必須のFIFOへフォールバックする。
+/// </summary>
 VkPresentModeKHR VulkanRenderer::ChooseSwapchainPresentMode(const std::vector<VkPresentModeKHR>& modes) const
 {
 	for (const auto mode : modes) if (mode == VK_PRESENT_MODE_MAILBOX_KHR) return mode;
 	return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-/** Surface指定サイズまたは現在のクライアントサイズからSwapchain寸法を決定する。 */
+/// <summary>
+/// Surface指定サイズまたは現在のクライアントサイズからSwapchain寸法を決定する。
+/// </summary>
 VkExtent2D VulkanRenderer::ChooseSwapchainExtent(const VkSurfaceCapabilitiesKHR& capabilities) const
 {
 	if (capabilities.currentExtent.width != UINT32_MAX) return capabilities.currentExtent;
@@ -1113,7 +1237,9 @@ VkExtent2D VulkanRenderer::ChooseSwapchainExtent(const VkSurfaceCapabilitiesKHR&
 		std::clamp(windowHeight_, capabilities.minImageExtent.height, capabilities.maxImageExtent.height) };
 }
 
-/** Win32表示とDebug診断に必要なVulkan Instance拡張名を列挙する。 */
+/// <summary>
+/// Win32表示とDebug診断に必要なVulkan Instance拡張名を列挙する。
+/// </summary>
 std::vector<const char*> VulkanRenderer::GetRequiredInstanceExtensions() const
 {
 	std::vector<const char*> result{ VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
@@ -1123,7 +1249,9 @@ std::vector<const char*> VulkanRenderer::GetRequiredInstanceExtensions() const
 	return result;
 }
 
-/** Swapchainに加え、NGXが問い合わせたDLSS用Device拡張を重複なく列挙する。 */
+/// <summary>
+/// Swapchainに加え、NGXが問い合わせたDLSS用Device拡張を重複なく列挙する。
+/// </summary>
 std::vector<const char*> VulkanRenderer::GetRequiredDeviceExtensions() const
 {
 	std::vector<const char*> result(kDeviceExtensions.begin(), kDeviceExtensions.end());
@@ -1132,7 +1260,9 @@ std::vector<const char*> VulkanRenderer::GetRequiredDeviceExtensions() const
 	return result;
 }
 
-/** Debug構成で要求するKhronos Validation Layerがインストール済みか検証する。 */
+/// <summary>
+/// Debug構成で要求するKhronos Validation Layerがインストール済みか検証する。
+/// </summary>
 bool VulkanRenderer::CheckValidationLayerSupport() const
 {
 	std::uint32_t count = 0; VK_CHECK(vkEnumerateInstanceLayerProperties(&count, nullptr));
@@ -1146,7 +1276,9 @@ bool VulkanRenderer::CheckValidationLayerSupport() const
 	return true;
 }
 
-/** Instance生成時と生成後で共用するDebug Messenger設定を組み立てる。 */
+/// <summary>
+/// Instance生成時と生成後で共用するDebug Messenger設定を組み立てる。
+/// </summary>
 VkDebugUtilsMessengerCreateInfoEXT VulkanRenderer::MakeDebugMessengerCreateInfo()
 {
 	VkDebugUtilsMessengerCreateInfoEXT info{ VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
@@ -1156,7 +1288,9 @@ VkDebugUtilsMessengerCreateInfoEXT VulkanRenderer::MakeDebugMessengerCreateInfo(
 	return info;
 }
 
-/** Vulkan Validation Layerの警告・エラーをVisual Studio出力へ転送する。 */
+/// <summary>
+/// Vulkan Validation Layerの警告・エラーをVisual Studio出力へ転送する。
+/// </summary>
 VKAPI_ATTR VkBool32 VKAPI_CALL VulkanRenderer::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT, VkDebugUtilsMessageTypeFlagsEXT, const VkDebugUtilsMessengerCallbackDataEXT* data, void*)
 {
 	OutputDebugStringA("[Vulkan] "); OutputDebugStringA(data->pMessage); OutputDebugStringA("\n");
@@ -1164,14 +1298,18 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VulkanRenderer::DebugCallback(VkDebugUtilsMessage
 	return VK_FALSE;
 }
 
-/** Instance拡張関数を取得してDebug Messengerを生成する。 */
+/// <summary>
+/// Instance拡張関数を取得してDebug Messengerを生成する。
+/// </summary>
 VkResult VulkanRenderer::CreateDebugUtilsMessenger(const VkDebugUtilsMessengerCreateInfoEXT* info)
 {
 	auto function = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance_, "vkCreateDebugUtilsMessengerEXT"));
 	return function == nullptr ? VK_ERROR_EXTENSION_NOT_PRESENT : function(instance_, info, nullptr, &debugMessenger_);
 }
 
-/** 生成済みDebug Messengerを拡張関数経由で破棄する。 */
+/// <summary>
+/// 生成済みDebug Messengerを拡張関数経由で破棄する。
+/// </summary>
 void VulkanRenderer::DestroyDebugUtilsMessenger()
 {
 	if (debugMessenger_ == VK_NULL_HANDLE || instance_ == VK_NULL_HANDLE) return;
