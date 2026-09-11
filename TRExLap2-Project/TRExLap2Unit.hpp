@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <map>
+#include <random>
 #include <vector>
 #include <utility>
 
@@ -14,6 +15,7 @@
 #include "TRExLap2Enums.hpp"
 #include "TRExLap2UnitEffect.hpp"
 #include "TRExLap2SpCommand.hpp"
+#include "Xorshift1024ss.hpp"
 
 class TRExLap2Unit
 {
@@ -165,19 +167,30 @@ protected:
 	/* ---- spiritual_command項 ---- */
 	std::vector<TRExLap2SpCommand> unitSpiritualCommands;
 public:
-	TRExLap2Unit(toml::table& tblUnit);
-	~TRExLap2Unit();
+	TRExLap2Unit(); // デフォルトコンストラクタ
+	TRExLap2Unit(toml::table& tblUnit); // TOMLユニット定義テーブルから、固定ユニットデータを構築する。
+	~TRExLap2Unit(); // デストラクタ
 };
 
 class TRExLap2IngameUnit : public TRExLap2Unit
 {
 protected:
+	/// <summary>
+	/// ユニットの乱数生成器。<para/>
+	/// Procやラッキー、野生の惜別などに使用。
+	/// </summary>
+	Xorshift1024ss randomGenerator = Xorshift1024ss(0x123456789abcdef0ULL); // ここで仮初期化
 	/* ---- 現在の固定値 ---- */
 	/// <summary>
 	/// ゲームデータ上でのユニットのレベル<para/>
 	/// 変動するが、頻繫じゃねーのでゲームデータ上でのユニットのレベルは敢えて固定値として扱う。
 	/// </summary>
 	std::int64_t level;
+	/// <summary>
+	/// ゲームデータ上でのユニットの経験値<para/>
+	/// スパロボと違い、50000経験値でレベルアップする仕様。
+	/// </summary>
+	std::int64_t experience;
 	/// <summary>
 	/// ゲームデータ上でのユニットの最大HP
 	/// </summary>
@@ -238,6 +251,14 @@ protected:
 	/// ゲームデータ上でのユニットの現在の最大精神ポイント(SP)
 	/// </summary>
 	std::int64_t currentMaxSP;
+	/// <summary>
+	/// ゲームデータ上でのユニットの現在の最大気力。デフォルト値は150。
+	/// </summary>
+	std::int64_t currentMaxMorale;
+	/// <summary>
+	/// ゲームデータ上でのユニットの現在の最小気力。デフォルト値は50。
+	/// </summary>
+	std::int64_t currentMinMorale;
 	/* ---- 現在の変動値:リソース ---- */
 	/// <summary>
 	/// ゲームデータ上でのユニットの現在HP
@@ -251,6 +272,10 @@ protected:
 	/// ゲームデータ上でのユニットの現在の精神ポイント(SP)
 	/// </summary>
 	std::int64_t currentSP;
+	/// <summary>
+	/// ゲームデータ上でのユニットの現在の気力
+	/// </summary>
+	std::int64_t currentMorale;
 	/* ---- 現在の変動値:パラメータ ---- */
 	/// <summary>
 	/// バフなどによって変動した、ゲームデータ上でのユニットの現在の装甲値
@@ -366,7 +391,78 @@ protected:
 	/// ユニットの魔法武器攻撃力の固定補正値
 	/// </summary>
 	std::map<std::u8string, std::int64_t> weaponMagicATKFixed;
+	/// <summary>
+	/// ユニットの武器射程の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> weaponRangeFixed;
+	/// <summary>
+	/// ユニットの格闘武器射程の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> weaponMeleeRangeFixed;
+	/// <summary>
+	/// ユニットの射撃武器射程の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> weaponRangedRangeFixed;
+	/// <summary>
+	/// ユニットの魔法武器射程の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> weaponMagicRangeFixed;
+	/// <summary>
+	/// ユニットの武器命中の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> weaponAccuracyFixed;
+	/// <summary>
+	/// ユニットの格闘武器命中の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> weaponMeleeAccuracyFixed;
+	/// <summary>
+	/// ユニットの射撃武器命中の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> weaponRangedAccuracyFixed;
+	/// <summary>
+	/// ユニットの魔法武器命中の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> weaponMagicAccuracyFixed;
+	/// <summary>
+	/// ユニットの武器クリティカル確率の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> weaponCriticalFixed;
+	/// <summary>
+	/// ユニットの格闘武器クリティカル確率の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> weaponMeleeCriticalFixed;
+	/// <summary>
+	/// ユニットの射撃武器クリティカル確率の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> weaponRangedCriticalFixed;
+	/// <summary>
+	/// ユニットの魔法武器クリティカル確率の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> weaponMagicCriticalFixed;
+	/// <summary>
+	/// ユニットの回避率の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> evasionRateFixed;
+	/// <summary>
+	/// ユニットの格闘武器回避率の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> meleeEvasionRateFixed;
+	/// <summary>
+	/// ユニットの射撃武器回避率の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> rangedEvasionRateFixed;
+	/// <summary>
+	/// ユニットの魔法武器回避率の固定補正値
+	/// </summary>
+	std::map<std::u8string, std::int64_t> magicEvasionRateFixed;
+	/// <summary>
+	/// ユニットの効果のうち、時間制限がついているもののフラグ。
+	/// trueの場合、その効果は効果の処理に基づき消失する。falseがデフォルト値。
+	/// </summary>
+	std::map<std::u8string, bool> unitExpiringTimerFlags;
+
 	/* ---- 関数 ---- */
+
 	/// <summary>
 	/// HPを設定する。0未満は0、最大値を超える場合は最大値に設定される。
 	/// </summary>
@@ -382,7 +478,14 @@ protected:
 	/// </summary>
 	/// <param name="toSP">設定するSPの値</param>
 	void setSP(std::int64_t toSP);
+	/// <summary>
+	/// 気力を設定する。最小値未満は最小値、最大値を超える場合は最大値に設定される。
+	/// </summary>
+	/// <param name="toMorale">設定する気力の値</param>
+	void setMorale(std::int64_t toMorale);
 public:
+	TRExLap2IngameUnit(const TRExLap2Unit& baseData);
+
 	/// <summary>
 	/// 現在のレベルを返却する。
 	/// </summary>
@@ -407,12 +510,52 @@ public:
 	/// </summary>
 	/// <returns>MP％</returns>
 	double getPercentMP() const;
+	/// <summary>
+	/// 現在の気力を返却する。
+	/// </summary>
+	/// <returns>現在の気力</returns>
+	std::int64_t getCurrentMorale() const;
+	bool checkMoraleCond(std::int64_t cMoraleValue, bool isUnder) const;
+	std::uint64_t getRandomRoller(std::uniform_int_distribution<std::uint64_t> dist);
+
+	/// <summary>
+	/// HPを減らす。
+	/// </summary>
+	/// <param name="amount">HPの減少量</param>
 	void decrHP(std::int64_t amount);
+	/// <summary>
+	/// MPを減らす。
+	/// </summary>
+	/// <param name="amount">MPの減少量</param>
 	void decrMP(std::int64_t amount);
+	/// <summary>
+	/// SPを減らす。
+	/// </summary>
+	/// <param name="amount">SPの減少量</param>
 	void decrSP(std::int64_t amount);
+
+	/// <summary>
+	/// HPを回復する。
+	/// </summary>
+	/// <param name="amount">HPの回復量</param>
 	void recvHP(std::int64_t amount);
+	/// <summary>
+	/// MPを回復する。
+	/// </summary>
+	/// <param name="amount">MPの回復量</param>
 	void recvMP(std::int64_t amount);
+	/// <summary>
+	/// SPを回復する。
+	/// </summary>
+	/// <param name="amount">SPの回復量</param>
 	void recvSP(std::int64_t amount);
+
+	/// <summary>
+	/// 気力を増減させる。負数を設定した場合は減少する。
+	/// </summary>
+	/// <param name="amount">増減させる気力の値</param>
+	void increaseMorale(std::int64_t amount);
+
 	/// <summary>
 	/// Luaスクリプト側から呼び出す際の、HP/MP/SPの変動をまとめて行う関数。<para/>
 	/// amountHP、amountMP、amountSPのいずれかが0以上の場合、その値に応じてHP、MP、SPを設定する。<para/>
@@ -437,6 +580,13 @@ public:
 	/// </summary>
 	/// <param name="amountSP">設定するSPの値</param>
 	void eventModifySP(std::int64_t amountSP);
+
+	/// <summary>
+	/// ユニットの効果やスキルの時間制限フラグを設定する。
+	/// </summary>
+	/// <param name="gainId">フラグを設定する要因のID</param>
+	void armEffectsAndSkillsExpiringTimer(std::u8string gainId);
+
 	/// <summary>
 	/// ユニットが与えるダメージの倍率を記入する。
 	/// </summary>
@@ -473,48 +623,146 @@ public:
 	/// <param name="gainId">倍率を適用する要因のID</param>
 	/// <param name="multiplier">倍率の値</param>
 	void approveWeaponMagicATKMultiplier(std::u8string gainId, double multiplier);
+
 	/// <summary>
-	/// ユニットの移動範囲の固定値を記入する。
+	/// ユニットの移動範囲の固定補正値を記入する。
 	/// </summary>
-	/// <param name="gainId">固定値を適用する要因のID</param>
-	/// <param name="fixedValue">固定値の値</param>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
 	void approveMovementRangeFixed(std::u8string gainId, std::int64_t fixedValue);
 	/// <summary>
-	/// ユニットが与えるダメージの固定値を記入する。
+	/// ユニットが与えるダメージの固定補正値を記入する。
 	/// </summary>
-	/// <param name="gainId">固定値を適用する要因のID</param>
-	/// <param name="fixedValue">固定値の値</param>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
 	void approveDealDamageFixed(std::u8string gainId, std::int64_t fixedValue);
 	/// <summary>
-	/// ユニットが受けるダメージの固定値を記入する。
+	/// ユニットが受けるダメージの固定補正値を記入する。
 	/// </summary>
-	/// <param name="gainId">固定値を適用する要因のID</param>
-	/// <param name="fixedValue">固定値の値</param>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
 	void approveReceiveDamageFixed(std::u8string gainId, std::int64_t fixedValue);
 	/// <summary>
-	/// ユニットの武器攻撃力の固定値を記入する。
+	/// ユニットの武器攻撃力の固定補正値を記入する。
 	/// </summary>
-	/// <param name="gainId">固定値を適用する要因のID</param>
-	/// <param name="fixedValue">固定値の値</param>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
 	void approveWeaponATKFixed(std::u8string gainId, std::int64_t fixedValue);
 	/// <summary>
-	/// ユニットの格闘武器攻撃力の固定値を記入する。
+	/// ユニットの格闘武器攻撃力の固定補正値を記入する。
 	/// </summary>
-	/// <param name="gainId">固定値を適用する要因のID</param>
-	/// <param name="fixedValue">固定値の値</param>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
 	void approveWeaponMeleeATKFixed(std::u8string gainId, std::int64_t fixedValue);
 	/// <summary>
-	/// ユニットの射撃武器攻撃力の固定値を記入する。
+	/// ユニットの射撃武器攻撃力の固定補正値を記入する。
 	/// </summary>
-	/// <param name="gainId">固定値を適用する要因のID</param>
-	/// <param name="fixedValue">固定値の値</param>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
 	void approveWeaponRangedATKFixed(std::u8string gainId, std::int64_t fixedValue);
 	/// <summary>
-	/// ユニットの魔法武器攻撃力の固定値を記入する。
+	/// ユニットの魔法武器攻撃力の固定補正値を記入する。
 	/// </summary>
-	/// <param name="gainId">固定値を適用する要因のID</param>
-	/// <param name="fixedValue">固定値の値</param>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
 	void approveWeaponMagicATKFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの武器射程の固定補正値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
+	void approveWeaponRangeFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの格闘武器射程の固定補正値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
+	void approveWeaponMeleeRangeFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの射撃武器射程の固定補正値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
+	void approveWeaponRangedRangeFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの魔法武器射程の固定補正値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
+	void approveWeaponMagicRangeFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの武器命中の固定補正値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
+	void approveWeaponAccuracyFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの格闘武器命中の固定補正値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
+	void approveWeaponMeleeAccuracyFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの射撃武器命中の固定補正値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
+	void approveWeaponRangedAccuracyFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの魔法武器命中の固定補正値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
+	void approveWeaponMagicAccuracyFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの武器クリティカル確率の固定補正値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
+	void approveWeaponCriticalFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの格闘武器クリティカル確率の固定補正値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
+	void approveWeaponMeleeCriticalFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの射撃武器クリティカル確率の固定補正値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
+	void approveWeaponRangedCriticalFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの魔法武器クリティカル確率の固定補正値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
+	void approveWeaponMagicCriticalFixed(std::u8string gainId, std::int64_t fixedValue);
+
+	/// <summary>
+	/// ユニットの回避率の固定補正値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
+	void approveEvasionRateFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの格闘武器回避率の固定補正値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
+	void approveMeleeEvasionRateFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの射撃武器回避率の固定補正値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
+	void approveRangedEvasionRateFixed(std::u8string gainId, std::int64_t fixedValue);
+	/// <summary>
+	/// ユニットの魔法武器回避率の固定補正値を記入する。
+	/// </summary>
+	/// <param name="gainId">固定補正値を適用する要因のID</param>
+	/// <param name="fixedValue">固定補正値の値</param>
+	void approveMagicEvasionRateFixed(std::u8string gainId, std::int64_t fixedValue);
 };
 
 /// <summary>

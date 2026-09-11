@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <cstdint>
 #include <limits>
 #include <optional>
@@ -319,10 +319,46 @@ enum class TRExLap2SpiritualsType : std::uint64_t {
 };
 
 /// <summary>
-/// enum型ごとの値変換仕様を定義する。
-///
+/// 特殊能力/特殊技能の発動トリガータイプ
+/// </summary>
+enum class TRExLap2SkillEffTriggerType : std::uint64_t {
+	/// <summary>
+	/// 常時発動
+	/// </summary>
+	ALWAYS,
+	/// <summary>
+	/// 攻撃時発動
+	/// </summary>
+	ON_ATTACK,
+	/// <summary>
+	/// 被攻撃時発動
+	/// </summary>
+	ON_ATTACKED,
+	/// <summary>
+	/// 撃破時発動
+	/// </summary>
+	ON_KILL,
+	/// <summary>
+	/// 被撃破時発動
+	/// </summary>
+	ON_KILLED,
+	/// <summary>
+	/// 与ダメージ時発動
+	/// </summary>
+	ON_DAMAGE,
+	/// <summary>
+	/// 被ダメージ時発動
+	/// </summary>
+	ON_DAMAGED,
+	/// <summary>
+	/// フリチェ
+	/// </summary>
+	ON_FREE_CHAIN,
+};
+
+/// <summary>
+/// enum型ごとの値変換仕様を定義する。<para/>
 /// 未対応のenum型は特殊化されていないため、変換を要求できない。
-///
 /// </summary>
 /// <typeparam name="EnumT">対象となるenum class型。</typeparam>
 template <typename EnumT>
@@ -344,7 +380,6 @@ std::optional<EnumT> TryParseEnum(const std::int64_t value)
 
 /// <summary>
 /// 符号なし整数からenum値への変換を試行する。
-///
 /// </summary>
 /// <typeparam name="EnumT">対象enum型。</typeparam>
 /// <param name="value">変換対象の整数値。</param>
@@ -361,7 +396,6 @@ std::optional<EnumT> TryParseEnum(const std::uint64_t value)
 
 /// <summary>
 /// UTF-8文字列からenum値への変換を試行する。
-///
 /// </summary>
 /// <typeparam name="EnumT">対象enum型。</typeparam>
 /// <param name="value">変換対象のUTF-8文字列。</param>
@@ -375,7 +409,6 @@ std::optional<EnumT> TryParseEnum(const std::string_view value)
 
 /// <summary>
 /// u8string形式のUTF-8文字列からenum値への変換を試行する。
-///
 /// </summary>
 /// <typeparam name="EnumT">対象enum型。</typeparam>
 /// <param name="value">変換対象のUTF-8文字列。</param>
